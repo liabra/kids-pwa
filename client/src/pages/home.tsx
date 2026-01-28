@@ -414,7 +414,7 @@ const KidsTasksApp = () => {
   // =========================
   // Pages
   // =========================
-  const HomePage = () => (
+  const renderHomePage = () => (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 p-4">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-8 drop-shadow-lg">
@@ -722,7 +722,7 @@ const KidsTasksApp = () => {
     </div>
   );
 
-  const AddChildPage = () => (
+  const renderAddChildPage = () => (
     <PageShell title="Ajouter un enfant">
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvel enfant</h3>
@@ -767,7 +767,7 @@ const KidsTasksApp = () => {
     </PageShell>
   );
 
-  const AddTaskPage = () => (
+  const renderAddTaskPage = () => (
     <PageShell title="Ajouter une tâche">
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle tâche</h3>
@@ -797,7 +797,7 @@ const KidsTasksApp = () => {
     </PageShell>
   );
 
-  const AddDailyRewardPage = () => (
+  const renderAddDailyRewardPage = () => (
     <PageShell title="Ajouter une récompense quotidienne">
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle récompense</h3>
@@ -834,7 +834,7 @@ const KidsTasksApp = () => {
     </PageShell>
   );
 
-  const AddChallengePage = () => (
+  const renderAddChallengePage = () => (
     <PageShell title="Ajouter un défi">
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouveau défi</h3>
@@ -871,7 +871,7 @@ const KidsTasksApp = () => {
     </PageShell>
   );
 
-  const AddWeeklyRewardPage = () => (
+  const renderAddWeeklyRewardPage = () => (
     <PageShell title="Ajouter une récompense hebdomadaire">
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle récompense hebdo</h3>
@@ -908,7 +908,7 @@ const KidsTasksApp = () => {
     </PageShell>
   );
 
-  const ManageTasksPage = () => {
+  const renderManageTasksPage = () => {
     if (!selectedChild) return <PageShell title="Gérer les tâches">Enfant introuvable.</PageShell>;
 
     return (
@@ -939,7 +939,7 @@ const KidsTasksApp = () => {
     );
   };
 
-  const HistoryPage = () => {
+  const renderHistoryPage = () => {
     if (!selectedChild) return <PageShell title="Historique">Enfant introuvable.</PageShell>;
 
     return (
@@ -992,7 +992,7 @@ const KidsTasksApp = () => {
     );
   };
 
-  const WeeklySummaryPage = () => (
+  const renderWeeklySummaryPage = () => (
     <PageShell title="Résumé de la semaine">
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-3xl font-bold mb-6 text-center">📊 Résumé de la semaine</h3>
@@ -1080,16 +1080,16 @@ const KidsTasksApp = () => {
   // =========================
   // Router switc
   // =========================
-  if (view.name === "addChild") return <AddChildPage />;
-  if (view.name === "addTask") return <AddTaskPage />;
-  if (view.name === "addDailyReward") return <AddDailyRewardPage />;
-  if (view.name === "addChallenge") return <AddChallengePage />;
-  if (view.name === "addWeeklyReward") return <AddWeeklyRewardPage />;
-  if (view.name === "manageTasks") return <ManageTasksPage />;
-  if (view.name === "history") return <HistoryPage />;
-  if (view.name === "weeklySummary") return <WeeklySummaryPage />;
+  if (view.name === "addChild") return renderAddChildPage();
+  if (view.name === "addTask") return renderAddTaskPage();
+  if (view.name === "addDailyReward") return renderAddDailyRewardPage();
+  if (view.name === "addChallenge") return renderAddChallengePage();
+  if (view.name === "addWeeklyReward") return renderAddWeeklyRewardPage();
+  if (view.name === "manageTasks") return renderManageTasksPage();
+  if (view.name === "history") return renderHistoryPage();
+  if (view.name === "weeklySummary") return renderWeeklySummaryPage();
 
-  return <HomePage />;
+  return renderHomePage();
 };
 
 export default KidsTasksApp;
