@@ -15,7 +15,65 @@ import {
   Zap,
   History,
   TrendingUp,
-} from "lucide-react";
+} from "lucide-react"; 
+
+  type ID = number;
+  type ChallengeStatus = "active" | "success" | "failed";
+
+  type ViewName =
+    | "home"
+    | "addChild"
+    | "addTask"
+    | "addDailyReward"
+    | "addChallenge"
+    | "addWeeklyReward"
+    | "manageTasks"
+    | "history"
+    | "weeklySummary";
+
+  type ViewState = {
+    name: ViewName;
+    payload: { childId?: ID };
+  };
+
+  type Child = {
+    id: ID;
+    name: string;
+    color: string;
+    assignedTasks: ID[];
+  };
+
+  type Task = {
+    id: ID;
+    name: string;
+  };
+
+  type DailyReward = {
+    id: ID;
+    name: string;
+    points: number;
+  };
+
+  type WeeklyReward = {
+    id: ID;
+    name: string;
+    points: number;
+  };
+
+  type Challenge = {
+    id: ID;
+    name: string;
+    pointsLost: number;
+  };
+
+  type ChildDayData = {
+    completedTasks: Record<ID, boolean>;
+    activeChallenges: Record<ID, ChallengeStatus>;
+    claimedWeeklyRewards: ID[];
+  };
+
+  // dailyData[dateKey][childId] = ChildDayData
+  type DailyData = Record<string, Record<ID, ChildDayData>>;
 
 const PageShell = ({
   title,
@@ -52,22 +110,24 @@ const KidsTasksApp = () => {
   // =========================
   // State: Data
   // =========================
-  const [children, setChildren] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [dailyRewards, setDailyRewards] = useState([]);
-  const [challenges, setChallenges] = useState([]);
-  const [weeklyRewards, setWeeklyRewards] = useState([]);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [dailyData, setDailyData] = useState({});
+  const [children, setChildren] = useState<Child[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [dailyRewards, setDailyRewards] = useState<DailyReward[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [weeklyRewards, setWeeklyRewards] = useState<WeeklyReward[]>([]);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [dailyData, setDailyData] = useState<DailyData>({});
 
   // =========================
   // State: Navigation (pages)
   // =========================
   // view.name: 'home' | 'addChild' | 'addTask' | 'addDailyReward' | 'addChallenge' | 'addWeeklyReward' | 'manageTasks' | 'history' | 'weeklySummary'
   // view.payload: { childId?: number }
-  const [view, setView] = useState({ name: "home", payload: {} });
+  const [view, setView] = useState<ViewState>({ name: "home", payload: {} });
 
-  const go = (name, payload = {}) => setView({ name, payload });
+  const go = (name: ViewName, payload: ViewState["payload"] = {}) =>
+    setView({ name, payload });
+
   const goHome = () => setView({ name: "home", payload: {} });
 
   // =========================
@@ -128,23 +188,23 @@ const KidsTasksApp = () => {
   // =========================
   // Date utils
   // =========================
-  const formatDate = (date) => date.toISOString().split("T")[0];
+  const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-  const getDayName = (date) => {
+  const getDayName = (date: Date) => {
     const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
     return days[date.getDay()];
   };
 
-  const getWeekStart = (date) => {
+  const getWeekStart = (date: Date) => {
     const d = new Date(date);
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
   };
 
-  const getWeekDates = (date) => {
+  const getWeekDates = (date: Date): Date[] => {
     const weekStart = getWeekStart(date);
-    const dates = [];
+    const dates: Date[] = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(weekStart);
       d.setDate(weekStart.getDate() + i);
@@ -191,7 +251,7 @@ const KidsTasksApp = () => {
     goHome();
   };
 
-  const removeChild = (id) => {
+  const removeChild = (id: ID) => {
     if (confirm("Voulez-vous vraiment supprimer cet enfant ?")) {
       setChildren((prev) => prev.filter((c) => c.id !== id));
     }
@@ -209,7 +269,7 @@ const KidsTasksApp = () => {
     goHome();
   };
 
-  const removeTask = (id) => {
+  const removeTask = (id: ID) => {
     if (!confirm("Voulez-vous vraiment supprimer cette tâche ?")) return;
 
     setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -222,7 +282,7 @@ const KidsTasksApp = () => {
     );
   };
 
-  const toggleTaskAssignment = (childId, taskId) => {
+  const toggleTaskAssignment = (childId: ID, taskId: ID) => {
     setChildren((prev) =>
       prev.map((child) => {
         if (child.id !== childId) return child;
@@ -240,16 +300,22 @@ const KidsTasksApp = () => {
   // =========================
   // Daily completion
   // =========================
-  const ensureDailySlot = (data, dateKey, childId) => {
-    const copy = { ...data };
+  const ensureDailySlot = (data: DailyData, dateKey: string, childId: ID): DailyData => {
+    const copy: DailyData = { ...data };
+
     if (!copy[dateKey]) copy[dateKey] = {};
     if (!copy[dateKey][childId]) {
-      copy[dateKey][childId] = { completedTasks: {}, activeChallenges: {}, claimedWeeklyRewards: [] };
+      copy[dateKey][childId] = {
+        completedTasks: {},
+        activeChallenges: {},
+        claimedWeeklyRewards: [],
+      };
     }
+
     return copy;
   };
 
-  const toggleTaskCompletion = (childId, taskId) => {
+  const toggleTaskCompletion = (childId: ID, taskId: ID) => {
     const dateKey = formatDate(currentDate);
     let newDailyData = ensureDailySlot(dailyData, dateKey, childId);
 
@@ -259,9 +325,9 @@ const KidsTasksApp = () => {
     setDailyData(newDailyData);
   };
 
-  const isTaskCompleted = (childId, taskId) => {
+  const isTaskCompleted = (childId: ID, taskId: ID): boolean => {
     const dateKey = formatDate(currentDate);
-    return dailyData[dateKey]?.[childId]?.completedTasks[taskId] || false;
+    return dailyData[dateKey]?.[childId]?.completedTasks?.[taskId] ?? false;
   };
 
   // =========================
@@ -286,12 +352,12 @@ const KidsTasksApp = () => {
     goHome();
   };
 
-  const removeChallenge = (id) => {
+  const removeChallenge = (id: ID) => {
     if (!confirm("Voulez-vous vraiment supprimer ce défi ?")) return;
     setChallenges((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const activateChallenge = (childId, challengeId) => {
+  const activateChallenge = (childId: ID, challengeId: ID) => {
     const dateKey = formatDate(currentDate);
     let newDailyData = ensureDailySlot(dailyData, dateKey, childId);
 
@@ -299,7 +365,7 @@ const KidsTasksApp = () => {
     setDailyData(newDailyData);
   };
 
-  const resolveChallenge = (childId, challengeId, success) => {
+  const resolveChallenge = (childId: ID, challengeId: ID, success: boolean) => {
     const dateKey = formatDate(currentDate);
     let newDailyData = ensureDailySlot(dailyData, dateKey, childId);
 
@@ -307,15 +373,15 @@ const KidsTasksApp = () => {
     setDailyData(newDailyData);
   };
 
-  const getActiveChallenges = (childId) => {
+  const getActiveChallenges = (childId: ID): Challenge[] => {
     const dateKey = formatDate(currentDate);
     const childData = dailyData[dateKey]?.[childId];
     if (!childData) return [];
 
     return Object.entries(childData.activeChallenges || {})
-      .filter(([_, status]) => status === "active")
-      .map(([challengeId]) => challenges.find((c) => c.id === parseInt(challengeId)))
-      .filter(Boolean);
+      .filter(([, status]) => status === "active")
+      .map(([challengeId]) => challenges.find((c) => c.id === Number(challengeId)))
+      .filter((c): c is Challenge => Boolean(c));
   };
 
   // =========================
@@ -330,7 +396,7 @@ const KidsTasksApp = () => {
     goHome();
   };
 
-  const removeDailyReward = (id) => {
+  const removeDailyReward = (id: ID) => {
     if (!confirm("Voulez-vous vraiment supprimer cette récompense ?")) return;
     setDailyRewards((prev) => prev.filter((r) => r.id !== id));
   };
@@ -345,18 +411,18 @@ const KidsTasksApp = () => {
     goHome();
   };
 
-  const removeWeeklyReward = (id) => {
+  const removeWeeklyReward = (id: ID) => {
     if (!confirm("Voulez-vous vraiment supprimer cette récompense ?")) return;
     setWeeklyRewards((prev) => prev.filter((r) => r.id !== id));
   };
 
-  const toggleWeeklyReward = (childId, rewardId) => {
+  const toggleWeeklyReward = (childId: ID, rewardId: ID) => {
     const weekStart = getWeekStart(currentDate);
     const weekKey = formatDate(weekStart);
 
-    let newDailyData = ensureDailySlot(dailyData, weekKey, childId);
-
+    const newDailyData = ensureDailySlot(dailyData, weekKey, childId);
     const claimed = newDailyData[weekKey][childId].claimedWeeklyRewards || [];
+
     newDailyData[weekKey][childId].claimedWeeklyRewards = claimed.includes(rewardId)
       ? claimed.filter((id) => id !== rewardId)
       : [...claimed, rewardId];
@@ -364,7 +430,7 @@ const KidsTasksApp = () => {
     setDailyData(newDailyData);
   };
 
-  const isWeeklyRewardClaimed = (childId, rewardId) => {
+  const isWeeklyRewardClaimed = (childId: ID, rewardId: ID): boolean => {
     const weekStart = getWeekStart(currentDate);
     const weekKey = formatDate(weekStart);
     const claimed = dailyData[weekKey]?.[childId]?.claimedWeeklyRewards || [];
@@ -374,7 +440,7 @@ const KidsTasksApp = () => {
   // =========================
   // Points
   // =========================
-  const getDailyPoints = (childId, date) => {
+  const getDailyPoints = (childId: ID, date: Date): number => {
     const dateKey = formatDate(date);
     const childData = dailyData[dateKey]?.[childId];
     if (!childData) return 0;
@@ -386,10 +452,9 @@ const KidsTasksApp = () => {
     });
 
     Object.entries(childData.activeChallenges || {}).forEach(([challengeId, status]) => {
-      if (status === "success") {
-        points += 1;
-      } else if (status === "failed") {
-        const challenge = challenges.find((c) => c.id === parseInt(challengeId));
+      if (status === "success") points += 1;
+      if (status === "failed") {
+        const challenge = challenges.find((c) => c.id === Number(challengeId));
         if (challenge) points -= challenge.pointsLost;
       }
     });
@@ -397,12 +462,12 @@ const KidsTasksApp = () => {
     return points;
   };
 
-  const getWeeklyPoints = (childId) => {
+  const getWeeklyPoints = (childId: ID): number => {
     const weekDates = getWeekDates(currentDate);
     return weekDates.reduce((acc, d) => acc + getDailyPoints(childId, d), 0);
   };
 
-  const getTierInfo = (points) => {
+  const getTierInfo = (points: number) => {
     if (points >= 15) return { icon: Flame, color: "text-orange-500", label: "En feu!", animation: "animate-pulse" };
     if (points >= 10) return { icon: Sparkles, color: "text-purple-500", label: "Brillant!", animation: "animate-bounce" };
     if (points >= 5) return { icon: Star, color: "text-yellow-500", label: "Super!", animation: "" };
