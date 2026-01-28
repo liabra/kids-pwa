@@ -117,6 +117,8 @@ const KidsTasksApp = () => {
   const [weeklyRewards, setWeeklyRewards] = useState<WeeklyReward[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<DailyData>({});
+  const [showSetup, setShowSetup] = useState(false);
+
 
   // =========================
   // State: Navigation (pages)
@@ -538,42 +540,58 @@ const KidsTasksApp = () => {
 
         {/* Navigation rubriques */}
         <div className="flex flex-wrap gap-3 justify-center mb-6">
+          {children.length > 0 && (
+            <button
+              onClick={() => go("addChild")}
+              className="px-6 py-3 bg-white text-purple-600 rounded-full font-semibold hover:bg-purple-50 transition shadow-lg flex items-center gap-2"
+            >
+              + Ajouter un autre enfant
+            </button>
+          )}
+
           <button
-            onClick={() => go("addChild")}
-            className="px-6 py-3 bg-white text-purple-600 rounded-full font-semibold hover:bg-purple-50 transition shadow-lg flex items-center gap-2"
+            onClick={() => setShowSetup((v) => !v)}
+            className="px-6 py-3 bg-white text-gray-800 rounded-full font-semibold hover:bg-gray-50 transition shadow-lg"
           >
-            <Plus size={20} />
-            Ajouter un enfant
-          </button>
-          <button
-            onClick={() => go("addTask")}
-            className="px-6 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition shadow-lg flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Ajouter une tâche
-          </button>
-          <button
-            onClick={() => go("addDailyReward")}
-            className="px-6 py-3 bg-white text-green-600 rounded-full font-semibold hover:bg-green-50 transition shadow-lg flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Récompense quotidienne
-          </button>
-          <button
-            onClick={() => go("addChallenge")}
-            className="px-6 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-orange-50 transition shadow-lg flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Ajouter un défi
-          </button>
-          <button
-            onClick={() => go("addWeeklyReward")}
-            className="px-6 py-3 bg-white text-pink-600 rounded-full font-semibold hover:bg-pink-50 transition shadow-lg flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Récompense hebdomadaire
+            {showSetup ? "Masquer la gestion" : "Gérer tâches / récompenses / défis"}
           </button>
         </div>
+
+        {showSetup && (
+          <div className="flex flex-wrap gap-3 justify-center mb-6">
+            <button
+              onClick={() => go("addTask")}
+              className="px-6 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition shadow-lg flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Ajouter une tâche
+            </button>
+
+            <button
+              onClick={() => go("addDailyReward")}
+              className="px-6 py-3 bg-white text-green-600 rounded-full font-semibold hover:bg-green-50 transition shadow-lg flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Récompense quotidienne
+            </button>
+
+            <button
+              onClick={() => go("addChallenge")}
+              className="px-6 py-3 bg-white text-orange-600 rounded-full font-semibold hover:bg-orange-50 transition shadow-lg flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Ajouter un défi
+            </button>
+
+            <button
+              onClick={() => go("addWeeklyReward")}
+              className="px-6 py-3 bg-white text-pink-600 rounded-full font-semibold hover:bg-pink-50 transition shadow-lg flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Récompense hebdomadaire
+            </button>
+          </div>
+        )}
 
         {children.length === 0 && (
           <div className="bg-white/80 rounded-xl shadow-lg p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -592,6 +610,7 @@ const KidsTasksApp = () => {
             </button>
           </div>
         )}
+      
 
         {/* Grille des enfants (Home = toujours visible) */}
         {children.length > 0 && (
@@ -745,6 +764,8 @@ const KidsTasksApp = () => {
       )}
 
         {/* Lists (restent sur Home pour contrôle global) */}
+        {showSetup && (
+          <>
         {tasks.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">📋 Tâches disponibles</h2>
@@ -814,8 +835,10 @@ const KidsTasksApp = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+        </>
+            )}
+      </div> 
+    </div>   
   );
 
   const renderAddChildPage = () => (
