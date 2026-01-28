@@ -575,8 +575,27 @@ const KidsTasksApp = () => {
           </button>
         </div>
 
+        {children.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              👋 Bienvenue dans Kids PWA
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Commence par ajouter un enfant pour créer ses tâches,
+              ses défis et suivre ses points jour après jour.
+            </p>
+            <button
+              onClick={() => go("addChild")}
+              className="px-6 py-3 bg-purple-500 text-white rounded-full font-semibold hover:bg-purple-600 transition shadow-lg"
+            >
+              ➕ Ajouter un enfant
+            </button>
+          </div>
+        )}
+        
         {/* Grille des enfants (Home = toujours visible) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {children.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {children.map((child) => {
             const dailyPoints = getDailyPoints(child.id, currentDate);
             const weeklyPoints = getWeeklyPoints(child.id);
@@ -723,6 +742,7 @@ const KidsTasksApp = () => {
             );
           })}
         </div>
+      )}
 
         {/* Lists (restent sur Home pour contrôle global) */}
         {tasks.length > 0 && (
