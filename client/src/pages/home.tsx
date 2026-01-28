@@ -1,3 +1,6 @@
+Kids paw
+
+
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus,
@@ -16,6 +19,37 @@ import {
   History,
   TrendingUp,
 } from "lucide-react";
+
+const PageShell = ({
+  title,
+  onHome,
+  children,
+}: {
+  title: string;
+  onHome: () => void;
+  children: React.ReactNode;
+}) => (
+  <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 p-4">
+    <div className="max-w-7xl mx-auto">
+      <div className="bg-white rounded-xl shadow-lg p-4 mb-6 flex items-center justify-between gap-3">
+        <button
+          onClick={onHome}
+          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+        >
+          ← Accueil
+        </button>
+
+        <div className="text-center flex-1">
+          <div className="text-xl md:text-2xl font-bold text-gray-800">{title}</div>
+        </div>
+
+        <div className="w-[96px]" />
+      </div>
+
+      {children}
+    </div>
+  </div>
+);
 
 const KidsTasksApp = () => {
   // =========================
@@ -391,26 +425,6 @@ const KidsTasksApp = () => {
     return children.find((c) => c.id === childId) || null;
   }, [view, children]);
 
-  const PageShell = ({ title, children: inner }) => (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-4 mb-6 flex items-center justify-between gap-3">
-          <button
-            onClick={goHome}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
-          >
-            ← Accueil
-          </button>
-          <div className="text-center flex-1">
-            <div className="text-xl md:text-2xl font-bold text-gray-800">{title}</div>
-          </div>
-          <div className="w-[96px]" />
-        </div>
-        {inner}
-      </div>
-    </div>
-  );
-
   // =========================
   // Pages
   // =========================
@@ -723,7 +737,7 @@ const KidsTasksApp = () => {
   );
 
   const renderAddChildPage = () => (
-    <PageShell title="Ajouter un enfant">
+    <PageShell title="Ajouter un enfant" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvel enfant</h3>
         <input
@@ -768,7 +782,7 @@ const KidsTasksApp = () => {
   );
 
   const renderAddTaskPage = () => (
-    <PageShell title="Ajouter une tâche">
+    <PageShell title="Ajouter une tâche" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle tâche</h3>
         <input
@@ -798,7 +812,7 @@ const KidsTasksApp = () => {
   );
 
   const renderAddDailyRewardPage = () => (
-    <PageShell title="Ajouter une récompense quotidienne">
+    <PageShell title="Ajouter une récompense quotidienne" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle récompense</h3>
         <input
@@ -835,7 +849,7 @@ const KidsTasksApp = () => {
   );
 
   const renderAddChallengePage = () => (
-    <PageShell title="Ajouter un défi">
+    <PageShell title="Ajouter un défi" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouveau défi</h3>
         <input
@@ -872,7 +886,7 @@ const KidsTasksApp = () => {
   );
 
   const renderAddWeeklyRewardPage = () => (
-    <PageShell title="Ajouter une récompense hebdomadaire">
+    <PageShell title="Ajouter une récompense hebdomadaire" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle récompense hebdo</h3>
         <input
@@ -909,10 +923,10 @@ const KidsTasksApp = () => {
   );
 
   const renderManageTasksPage = () => {
-    if (!selectedChild) return <PageShell title="Gérer les tâches">Enfant introuvable.</PageShell>;
+    if (!selectedChild) return <PageShell title="Gérer les tâches" onHome={goHome}>Enfant introuvable.</PageShell>;
 
     return (
-      <PageShell title={`Gérer les tâches - ${selectedChild.name}`}>
+      <PageShell title={`Gérer les tâches - ${selectedChild.name}`} onHome={goHome}>
         <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
           <div className="space-y-2 mb-4">
             {tasks.length === 0 && <div className="text-gray-600">Aucune tâche disponible pour le moment.</div>}
@@ -940,10 +954,10 @@ const KidsTasksApp = () => {
   };
 
   const renderHistoryPage = () => {
-    if (!selectedChild) return <PageShell title="Historique">Enfant introuvable.</PageShell>;
+    if (!selectedChild) return <PageShell title="Historique" onHome={goHome}>Enfant introuvable.</PageShell>;
 
     return (
-      <PageShell title={`Historique - ${selectedChild.name}`}>
+      <PageShell title={`Historique - ${selectedChild.name}`} onHome={goHome}>
         <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
           {/* ✅ Bouton Aujourd’hui pour l’historique */}
           <div className="flex gap-2 mb-4">
@@ -993,7 +1007,7 @@ const KidsTasksApp = () => {
   };
 
   const renderWeeklySummaryPage = () => (
-    <PageShell title="Résumé de la semaine">
+    <PageShell title="Résumé de la semaine" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-3xl font-bold mb-6 text-center">📊 Résumé de la semaine</h3>
 
@@ -1078,18 +1092,21 @@ const KidsTasksApp = () => {
   );
 
   // =========================
-  // Router switc
-  // =========================
-  if (view.name === "addChild") return renderAddChildPage();
-  if (view.name === "addTask") return renderAddTaskPage();
-  if (view.name === "addDailyReward") return renderAddDailyRewardPage();
-  if (view.name === "addChallenge") return renderAddChallengePage();
-  if (view.name === "addWeeklyReward") return renderAddWeeklyRewardPage();
-  if (view.name === "manageTasks") return renderManageTasksPage();
-  if (view.name === "history") return renderHistoryPage();
-  if (view.name === "weeklySummary") return renderWeeklySummaryPage();
+    // Router switch
+    // =========================
+    return (
+      <>
+        {view.name === "home" && renderHomePage()}
+        {view.name === "addChild" && renderAddChildPage()}
+        {view.name === "addTask" && renderAddTaskPage()}
+        {view.name === "addDailyReward" && renderAddDailyRewardPage()}
+        {view.name === "addChallenge" && renderAddChallengePage()}
+        {view.name === "addWeeklyReward" && renderAddWeeklyRewardPage()}
+        {view.name === "manageTasks" && renderManageTasksPage()}
+        {view.name === "history" && renderHistoryPage()}
+        {view.name === "weeklySummary" && renderWeeklySummaryPage()}
+      </>
+    );
+  };
 
-  return renderHomePage();
-};
-
-export default KidsTasksApp;
+  export default KidsTasksApp;
