@@ -1,6 +1,3 @@
-Kids paw
-
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus,
@@ -1092,21 +1089,21 @@ const KidsTasksApp = () => {
   );
 
   // =========================
-    // Router switch
-    // =========================
-    return (
-      <>
-        {view.name === "home" && renderHomePage()}
-        {view.name === "addChild" && renderAddChildPage()}
-        {view.name === "addTask" && renderAddTaskPage()}
-        {view.name === "addDailyReward" && renderAddDailyRewardPage()}
-        {view.name === "addChallenge" && renderAddChallengePage()}
-        {view.name === "addWeeklyReward" && renderAddWeeklyRewardPage()}
-        {view.name === "manageTasks" && renderManageTasksPage()}
-        {view.name === "history" && renderHistoryPage()}
-        {view.name === "weeklySummary" && renderWeeklySummaryPage()}
-      </>
-    );
-  };
+  // Router switch
+  // =========================
+  return (
+    <>
+      {view.name === "home" && renderHomePage()}
+      {view.name === "addChild" && renderAddChildPage()}
+      {view.name === "addTask" && renderAddTaskPage()}
+      {view.name === "addDailyReward" && renderAddDailyRewardPage()}
+      {view.name === "addChallenge" && renderAddChallengePage()}
+      {view.name === "addWeeklyReward" && renderAddWeeklyRewardPage()}
+      {view.name === "manageTasks" && renderManageTasksPage()}
+      {view.name === "history" && renderHistoryPage()}
+      {view.name === "weeklySummary" && renderWeeklySummaryPage()}
+    </>
+  );
+};
 
-  export default KidsTasksApp;
+export default KidsTasksApp;
