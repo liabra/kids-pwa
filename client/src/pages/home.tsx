@@ -15,6 +15,7 @@ import {
   Zap,
   History,
   TrendingUp,
+  Pencil,
 } from "lucide-react"; 
 
   type ID = number;
@@ -149,6 +150,9 @@ const KidsTasksApp = () => {
   const [newWeeklyRewardName, setNewWeeklyRewardName] = useState("");
   const [newWeeklyRewardPoints, setNewWeeklyRewardPoints] = useState(20);
 
+  const [editingChildId, setEditingChildId] = useState<number | null>(null);
+  const [editingChildName, setEditingChildName] = useState<string>("");
+
   // Couleurs prédéfinies
   const colors = [
     "#FF6B6B",
@@ -258,6 +262,30 @@ const KidsTasksApp = () => {
       setChildren((prev) => prev.filter((c) => c.id !== id));
     }
   };
+
+  const startRenameChild = (childId: number, currentName: string) => {
+    setEditingChildId(childId);
+    setEditingChildName(currentName);
+  };
+
+  const cancelRenameChild = () => {
+    setEditingChildId(null);
+    setEditingChildName("");
+  };
+
+  const saveRenameChild = () => {
+    if (editingChildId === null) return;
+
+    const name = editingChildName.trim();
+    if (!name) return; // option: tu peux afficher un petit message si vide
+
+    setChildren((prev) =>
+      prev.map((c) => (c.id === editingChildId ? { ...c, name } : c)),
+    );
+
+    cancelRenameChild();
+  };
+
 
   // =========================
   // Tasks CRUD + assignment
@@ -626,9 +654,52 @@ const KidsTasksApp = () => {
             return (
               <div key={child.id} className="bg-white rounded-xl shadow-xl p-6 relative">
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold" style={{ color: child.color }}>
-                    {child.name}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    {editingChildId === child.id ? (
+                      <>
+                        <input
+                          value={editingChildName}
+                          onChange={(e) => setEditingChildName(e.target.value)}
+                          className="text-xl font-bold border-b-2 border-purple-400 focus:outline-none"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveRenameChild();
+                            if (e.key === "Escape") cancelRenameChild();
+                          }}
+                        />
+
+                        <button
+                          onClick={saveRenameChild}
+                          className="text-green-600 hover:text-green-800"
+                          title="Valider"
+                        >
+                          <Check size={18} />
+                        </button>
+
+                        <button
+                          onClick={cancelRenameChild}
+                          className="text-gray-500 hover:text-gray-700"
+                          title="Annuler"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-2xl font-bold" style={{ color: child.color }}>
+                          {child.name}
+                        </h2>
+
+                        <button
+                          onClick={() => startRenameChild(child.id, child.name)}
+                          className="text-gray-400 hover:text-purple-600 transition"
+                          title="Renommer"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                   <button onClick={() => removeChild(child.id)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={20} />
                   </button>
