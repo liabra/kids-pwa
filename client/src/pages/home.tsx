@@ -327,6 +327,19 @@ const KidsTasksApp = () => {
     );
   };
 
+  const clearAllAssignedTasksForChild = (childId: ID) => {
+    if (!confirm("Retirer toutes les tâches assignées à cet enfant ?")) return;
+
+    setChildren((prev) =>
+      prev.map((child) =>
+        child.id !== childId
+          ? child
+          : { ...child, assignedTasks: [] }
+      )
+    );
+  };
+
+
   // =========================
   // Daily completion
   // =========================
@@ -359,6 +372,17 @@ const KidsTasksApp = () => {
     const dateKey = formatDate(currentDate);
     return dailyData[dateKey]?.[childId]?.completedTasks?.[taskId] ?? false;
   };
+
+  const clearTodayCompletionsForChild = (childId: ID) => {
+    if (!confirm("Tout décocher pour aujourd’hui ?")) return;
+
+    const dateKey = formatDate(currentDate);
+    const newDailyData = ensureDailySlot(dailyData, dateKey, childId);
+
+    newDailyData[dateKey][childId].completedTasks = {};
+    setDailyData(newDailyData);
+  };
+
 
   // =========================
   // Challenges CRUD + activation (manual only)
@@ -445,6 +469,87 @@ const KidsTasksApp = () => {
     if (!confirm("Voulez-vous vraiment supprimer cette récompense ?")) return;
     setWeeklyRewards((prev) => prev.filter((r) => r.id !== id));
   };
+
+  const clearAllTasks = () => {
+    if (!confirm("Supprimer TOUTES les tâches ?")) return;
+
+    const allTaskIds = tasks.map(t => t.id);
+
+    setTasks([]);
+
+    // Retirer les tâches assignées chez tous les enfants
+    setChildren(prev => prev.map(c => ({ ...c, assignedTasks: [] })));
+
+    // Nettoyer dailyData.completedTasks partout
+    setDailyData(prev => {
+      const copy: DailyData = { ...prev };
+      for (const dateKey of Object.keys(copy)) {
+        for (const childIdStr of Object.keys(copy[dateKey])) {
+          const childId = Number(childIdStr);
+          const slot = copy[dateKey][childId];
+          if (!slot?.completedTasks) continue;
+
+          const newCompleted = { ...slot.completedTasks };
+          for (const tid of allTaskIds) delete newCompleted[tid];
+          copy[dateKey][childId] = { ...slot, completedTasks: newCompleted };
+        }
+      }
+      return copy;
+    });
+  };
+
+  const clearAllDailyRewards = () => {
+    if (!confirm("Supprimer TOUTES les récompenses quotidiennes ?")) return;
+    setDailyRewards([]);
+  };
+
+  const clearAllChallenges = () => {
+    if (!confirm("Supprimer TOUS les défis ?")) return;
+
+    const allChallengeIds = challenges.map(c => c.id);
+    setChallenges([]);
+
+    setDailyData(prev => {
+      const copy: DailyData = { ...prev };
+      for (const dateKey of Object.keys(copy)) {
+        for (const childIdStr of Object.keys(copy[dateKey])) {
+          const childId = Number(childIdStr);
+          const slot = copy[dateKey][childId];
+          if (!slot?.activeChallenges) continue;
+
+          const newActive = { ...slot.activeChallenges };
+          for (const cid of allChallengeIds) delete newActive[cid];
+          copy[dateKey][childId] = { ...slot, activeChallenges: newActive };
+        }
+      }
+      return copy;
+    });
+  };
+
+  const clearAllWeeklyRewards = () => {
+    if (!confirm("Supprimer TOUTES les récompenses hebdomadaires ?")) return;
+
+    const allRewardIds = weeklyRewards.map(r => r.id);
+    setWeeklyRewards([]);
+
+    setDailyData(prev => {
+      const copy: DailyData = { ...prev };
+      for (const dateKey of Object.keys(copy)) {
+        for (const childIdStr of Object.keys(copy[dateKey])) {
+          const childId = Number(childIdStr);
+          const slot = copy[dateKey][childId];
+          if (!slot?.claimedWeeklyRewards?.length) continue;
+
+          copy[dateKey][childId] = {
+            ...slot,
+            claimedWeeklyRewards: slot.claimedWeeklyRewards.filter(id => !allRewardIds.includes(id)),
+          };
+        }
+      }
+      return copy;
+    });
+  };
+
 
   const toggleWeeklyReward = (childId: ID, rewardId: ID) => {
     const weekStart = getWeekStart(currentDate);
@@ -767,7 +872,18 @@ const KidsTasksApp = () => {
 
                 {childTasks.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-semibold text-gray-700 mb-2 text-sm">Tâches du jour:</h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-gray-700 text-sm">
+                        Tâches du jour :
+                      </h3>
+
+                      <button
+                        onClick={() => clearAllAssignedTasksForChild(child.id)}
+                        className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                      >
+                        🗑️ Retirer toutes les tâches
+                      </button>
+                    </div>
                     <div className="space-y-2">
                       {childTasks.map((task) => (
                         <label
@@ -839,7 +955,17 @@ const KidsTasksApp = () => {
           <>
         {tasks.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">📋 Tâches disponibles</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">📋 Tâches disponibles</h2>
+              <button
+                onClick={clearAllTasks}
+                className="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-semibold flex items-center gap-2"
+                title="Supprimer toutes les tâches"
+              >
+                <Trash2 size={16} />
+                Tout supprimer
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {tasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
@@ -855,7 +981,16 @@ const KidsTasksApp = () => {
 
         {dailyRewards.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">🎁 Récompenses quotidiennes</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">🎁 Récompenses quotidiennes</h2>
+              <button
+                onClick={clearAllDailyRewards}
+                className="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-semibold flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Tout supprimer
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {dailyRewards.map((reward) => (
                 <div key={reward.id} className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
@@ -873,7 +1008,16 @@ const KidsTasksApp = () => {
 
         {challenges.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">⚡ Défis</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">⚡ Défis</h2>
+              <button
+                onClick={clearAllChallenges}
+                className="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-semibold flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Tout supprimer
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {challenges.map((challenge) => (
                 <div key={challenge.id} className="flex items-center justify-between bg-orange-50 p-3 rounded-lg">
@@ -891,7 +1035,16 @@ const KidsTasksApp = () => {
 
         {weeklyRewards.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">🏆 Récompenses hebdomadaires</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">🏆 Récompenses hebdomadaires</h2>
+              <button
+                onClick={clearAllWeeklyRewards}
+                className="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-semibold flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Tout supprimer
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {weeklyRewards.map((reward) => (
                 <div key={reward.id} className="flex items-center justify-between bg-purple-50 p-3 rounded-lg">
