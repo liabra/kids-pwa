@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { usePersistentState } from "@/lib/usePersistentState";
+import { isPinSet, setPin, verifyPin, resetAll } from "@/lib/parentLock";
 import {
   Plus,
   Trash2,
@@ -17,7 +18,10 @@ import {
   History,
   TrendingUp,
   Pencil,
-} from "lucide-react"; 
+  Lock,
+  Unlock,
+  Settings,
+} from "lucide-react";
 
   type ID = number;
   type ChallengeStatus = "active" | "success" | "failed";
@@ -31,7 +35,8 @@ import {
     | "addWeeklyReward"
     | "manageTasks"
     | "history"
-    | "weeklySummary";
+    | "weeklySummary"
+    | "settings";
 
   type ViewState = {
     name: ViewName;
@@ -108,6 +113,100 @@ const PageShell = ({
   </div>
 );
 
+/**
+ * Modale de saisie du code PIN parent.
+ *  - mode "set"    : premier réglage, demande le PIN + une confirmation.
+ *  - mode "verify" : déverrouillage, demande le PIN une seule fois.
+ */
+const PinModal = ({
+  mode,
+  error,
+  busy,
+  onSubmit,
+  onCancel,
+}: {
+  mode: "set" | "verify";
+  error?: string;
+  busy?: boolean;
+  onSubmit: (pin: string) => void;
+  onCancel: () => void;
+}) => {
+  const [pin, setPinValue] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const isSet = mode === "set";
+  const tooShort = pin.length < 4;
+  const mismatch = isSet && confirm.length > 0 && pin !== confirm;
+  const canSubmit = !busy && !tooShort && (!isSet || pin === confirm);
+
+  const submit = () => {
+    if (canSubmit) onSubmit(pin);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Lock className="text-purple-600" size={24} />
+          <h3 className="text-xl font-bold text-gray-800">
+            {isSet ? "Définir le code parent" : "Code parent"}
+          </h3>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          {isSet
+            ? "Choisis un code à 4 chiffres minimum. Il protège les réglages et la gestion. ⚠️ Il n'est pas récupérable en cas d'oubli."
+            : "Saisis ton code pour accéder au mode parent."}
+        </p>
+
+        <input
+          type="password"
+          inputMode="numeric"
+          autoFocus
+          placeholder="Code PIN"
+          value={pin}
+          onChange={(e) => setPinValue(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && !isSet && submit()}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 text-center text-2xl tracking-widest"
+        />
+
+        {isSet && (
+          <input
+            type="password"
+            inputMode="numeric"
+            placeholder="Confirme le code"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 text-center text-2xl tracking-widest"
+          />
+        )}
+
+        {mismatch && (
+          <div className="text-sm text-red-600 mb-2">Les deux codes ne correspondent pas.</div>
+        )}
+        {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
+
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={submit}
+            disabled={!canSubmit}
+            className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition disabled:opacity-50"
+          >
+            {busy ? "…" : isSet ? "Enregistrer" : "Déverrouiller"}
+          </button>
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+          >
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const KidsTasksApp = () => {
   // =========================
   // State: Data
@@ -135,6 +234,72 @@ const KidsTasksApp = () => {
     challengesReady &&
     weeklyRewardsReady &&
     dailyDataReady;
+
+  // =========================
+  // State: Verrou parent
+  // =========================
+  // L'app démarre en mode enfant (consultation + cocher les tâches). Le mode
+  // parent est en mémoire uniquement : il reste actif jusqu'à un verrouillage
+  // manuel OU un rechargement de l'app (choix documenté : on ne re-verrouille
+  // PAS en revenant à l'accueil, pour ne pas gêner l'usage quotidien).
+  const [parentMode, setParentMode] = useState(false);
+  const [pinExists, setPinExists] = useState<boolean | null>(null);
+
+  // Modale PIN : null = fermée. pending = action à exécuter après déverrouillage.
+  const [pinPrompt, setPinPrompt] = useState<{
+    mode: "set" | "verify";
+    pending: (() => void) | null;
+    error?: string;
+    busy?: boolean;
+  } | null>(null);
+
+  // Au démarrage, on regarde si un PIN existe déjà sur cet appareil.
+  useEffect(() => {
+    isPinSet().then(setPinExists).catch(() => setPinExists(false));
+  }, []);
+
+  // Demande l'accès parent puis exécute `action`. Si déjà déverrouillé, exécute
+  // directement. Sinon ouvre la modale (réglage du PIN au tout premier usage,
+  // ou simple vérification ensuite).
+  const requireParent = (action: () => void = () => {}) => {
+    if (parentMode) {
+      action();
+      return;
+    }
+    setPinPrompt({ mode: pinExists ? "verify" : "set", pending: action });
+  };
+
+  const handlePinSubmit = async (pin: string) => {
+    if (!pinPrompt) return;
+    setPinPrompt({ ...pinPrompt, busy: true, error: undefined });
+    try {
+      if (pinPrompt.mode === "set") {
+        await setPin(pin);
+        setPinExists(true);
+      } else {
+        const ok = await verifyPin(pin);
+        if (!ok) {
+          setPinPrompt({ ...pinPrompt, busy: false, error: "Code incorrect." });
+          return;
+        }
+      }
+      const pending = pinPrompt.pending;
+      setParentMode(true);
+      setPinPrompt(null);
+      pending?.();
+    } catch {
+      setPinPrompt({
+        ...pinPrompt,
+        busy: false,
+        error: "Une erreur est survenue. Réessaie.",
+      });
+    }
+  };
+
+  const lockParent = () => {
+    setParentMode(false);
+    goHome();
+  };
 
 
   // =========================
@@ -621,6 +786,33 @@ const KidsTasksApp = () => {
   const renderHomePage = () => (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 p-4">
       <div className="max-w-7xl mx-auto">
+        {/* Barre verrou parent */}
+        <div className="flex justify-end mb-3">
+          {parentMode ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => go("settings")}
+                className="px-4 py-2 bg-white/90 text-gray-800 rounded-full font-semibold hover:bg-white transition shadow flex items-center gap-2"
+              >
+                <Settings size={18} /> Réglages
+              </button>
+              <button
+                onClick={lockParent}
+                className="px-4 py-2 bg-white/90 text-gray-800 rounded-full font-semibold hover:bg-white transition shadow flex items-center gap-2"
+              >
+                <Lock size={18} /> Verrouiller
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => requireParent()}
+              className="px-4 py-2 bg-white/90 text-gray-800 rounded-full font-semibold hover:bg-white transition shadow flex items-center gap-2"
+            >
+              <Unlock size={18} /> Mode parent
+            </button>
+          )}
+        </div>
+
         <h1 className="text-4xl md:text-5xl font-bold text-white text-center mb-8 drop-shadow-lg">
           ⭐ Tableau des Champions ⭐
         </h1>
@@ -664,26 +856,28 @@ const KidsTasksApp = () => {
           </div>
         </div>
 
-        {/* Navigation rubriques */}
-        <div className="flex flex-wrap gap-3 justify-center mb-6">
-          {children.length > 0 && (
+        {/* Navigation rubriques (mode parent uniquement) */}
+        {parentMode && (
+          <div className="flex flex-wrap gap-3 justify-center mb-6">
+            {children.length > 0 && (
+              <button
+                onClick={() => go("addChild")}
+                className="px-6 py-3 bg-white text-purple-600 rounded-full font-semibold hover:bg-purple-50 transition shadow-lg flex items-center gap-2"
+              >
+                + Ajouter un autre enfant
+              </button>
+            )}
+
             <button
-              onClick={() => go("addChild")}
-              className="px-6 py-3 bg-white text-purple-600 rounded-full font-semibold hover:bg-purple-50 transition shadow-lg flex items-center gap-2"
+              onClick={() => setShowSetup((v) => !v)}
+              className="px-6 py-3 bg-white text-gray-800 rounded-full font-semibold hover:bg-gray-50 transition shadow-lg"
             >
-              + Ajouter un autre enfant
+              {showSetup ? "Masquer la gestion" : "Gérer tâches / récompenses / défis"}
             </button>
-          )}
+          </div>
+        )}
 
-          <button
-            onClick={() => setShowSetup((v) => !v)}
-            className="px-6 py-3 bg-white text-gray-800 rounded-full font-semibold hover:bg-gray-50 transition shadow-lg"
-          >
-            {showSetup ? "Masquer la gestion" : "Gérer tâches / récompenses / défis"}
-          </button>
-        </div>
-
-        {showSetup && (
+        {parentMode && showSetup && (
           <div className="flex flex-wrap gap-3 justify-center mb-6">
             <button
               onClick={() => go("addTask")}
@@ -729,7 +923,7 @@ const KidsTasksApp = () => {
             </div>
 
             <button
-              onClick={() => go("addChild")}
+              onClick={() => requireParent(() => go("addChild"))}
               className="px-6 py-3 bg-purple-500 text-white rounded-full font-semibold hover:bg-purple-600 transition shadow-lg"
             >
               ➕ Ajouter un enfant
@@ -788,19 +982,23 @@ const KidsTasksApp = () => {
                           {child.name}
                         </h2>
 
-                        <button
-                          onClick={() => startRenameChild(child.id, child.name)}
-                          className="text-gray-400 hover:text-purple-600 transition"
-                          title="Renommer"
-                        >
-                          <Pencil size={18} />
-                        </button>
+                        {parentMode && (
+                          <button
+                            onClick={() => startRenameChild(child.id, child.name)}
+                            className="text-gray-400 hover:text-purple-600 transition"
+                            title="Renommer"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
-                  <button onClick={() => removeChild(child.id)} className="text-red-500 hover:text-red-700 transition">
-                    <Trash2 size={20} />
-                  </button>
+                  {parentMode && (
+                    <button onClick={() => removeChild(child.id)} className="text-red-500 hover:text-red-700 transition">
+                      <Trash2 size={20} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-center gap-3 mb-4">
@@ -830,12 +1028,14 @@ const KidsTasksApp = () => {
                     <History size={16} />
                     Historique
                   </button>
-                  <button
-                    onClick={() => go("manageTasks", { childId: child.id })}
-                    className="flex-1 px-3 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition text-sm"
-                  >
-                    Gérer les tâches
-                  </button>
+                  {parentMode && (
+                    <button
+                      onClick={() => go("manageTasks", { childId: child.id })}
+                      className="flex-1 px-3 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition text-sm"
+                    >
+                      Gérer les tâches
+                    </button>
+                  )}
                 </div>
 
                 {activeChallenges.length > 0 && (
@@ -844,20 +1044,22 @@ const KidsTasksApp = () => {
                     {activeChallenges.map((challenge) => (
                       <div key={challenge.id} className="bg-orange-50 rounded-lg p-3 mb-2">
                         <div className="text-sm font-medium text-gray-800 mb-2">{challenge.name}</div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => resolveChallenge(child.id, challenge.id, true)}
-                            className="flex-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs"
-                          >
-                            Réussi! (+1)
-                          </button>
-                          <button
-                            onClick={() => resolveChallenge(child.id, challenge.id, false)}
-                            className="flex-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs"
-                          >
-                            Réessayer (-{challenge.pointsLost})
-                          </button>
-                        </div>
+                        {parentMode && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => resolveChallenge(child.id, challenge.id, true)}
+                              className="flex-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs"
+                            >
+                              Réussi! (+1)
+                            </button>
+                            <button
+                              onClick={() => resolveChallenge(child.id, challenge.id, false)}
+                              className="flex-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition text-xs"
+                            >
+                              Réessayer (-{challenge.pointsLost})
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -870,12 +1072,14 @@ const KidsTasksApp = () => {
                         Tâches du jour :
                       </h3>
 
-                      <button
-                        onClick={() => clearAllAssignedTasksForChild(child.id)}
-                        className="text-xs text-red-500 hover:text-red-700 font-semibold"
-                      >
-                        🗑️ Retirer toutes les tâches
-                      </button>
+                      {parentMode && (
+                        <button
+                          onClick={() => clearAllAssignedTasksForChild(child.id)}
+                          className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                        >
+                          🗑️ Retirer toutes les tâches
+                        </button>
+                      )}
                     </div>
                     <div className="space-y-2">
                       {childTasks.map((task) => (
@@ -902,8 +1106,8 @@ const KidsTasksApp = () => {
                   </div>
                 )}
 
-                {/* Activer un défi (manual, jamais auto) */}
-                {challenges.length > 0 && (
+                {/* Activer un défi (manual, jamais auto) — mode parent uniquement */}
+                {parentMode && challenges.length > 0 && (
                   <div className="mb-4">
                     <h3 className="font-semibold text-gray-700 mb-2 text-sm">Activer un défi:</h3>
                     <div className="space-y-1">
@@ -943,8 +1147,8 @@ const KidsTasksApp = () => {
         </div>
       )}
 
-        {/* Lists (restent sur Home pour contrôle global) */}
-        {showSetup && (
+        {/* Lists (restent sur Home pour contrôle global) — mode parent */}
+        {parentMode && showSetup && (
           <>
         {tasks.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -1380,7 +1584,7 @@ const KidsTasksApp = () => {
                       return (
                         <button
                           key={reward.id}
-                          onClick={() => toggleWeeklyReward(child.id, reward.id)}
+                          onClick={() => requireParent(() => toggleWeeklyReward(child.id, reward.id))}
                           className={`p-3 rounded-lg transition ${
                             isClaimed
                               ? "bg-purple-200 text-purple-900 border-2 border-purple-500"
@@ -1413,6 +1617,53 @@ const KidsTasksApp = () => {
     </PageShell>
   );
 
+  const handleResetAll = async () => {
+    if (!confirm("⚠️ Tout effacer ? Cette action supprime DÉFINITIVEMENT toutes les données et le code parent. Elle est irréversible.")) return;
+    if (!confirm("Dernière confirmation : effacer définitivement toutes les données ?")) return;
+    try {
+      await resetAll();
+    } finally {
+      // Rechargement complet pour repartir d'un état propre.
+      window.location.reload();
+    }
+  };
+
+  const renderSettingsPage = () => (
+    <PageShell title="Réglages" onHome={goHome}>
+      <div className="max-w-md mx-auto space-y-6">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-2">Mode parent</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Tu es en mode parent. Verrouille pour revenir au mode enfant.
+          </p>
+          <button
+            onClick={lockParent}
+            className="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition flex items-center justify-center gap-2"
+          >
+            <Lock size={18} /> Verrouiller (mode enfant)
+          </button>
+        </div>
+
+        {/* Sauvegarde / restauration chiffrée : ajoutées à l'étape 3. */}
+
+        <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-red-200">
+          <h3 className="text-lg font-bold text-red-700 mb-2">Zone dangereuse</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Réinitialiser efface toutes les données (enfants, tâches, points…) et
+            le code parent. C'est le seul recours en cas d'oubli du code, et c'est
+            <strong> irréversible</strong>.
+          </p>
+          <button
+            onClick={handleResetAll}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2"
+          >
+            <Trash2 size={18} /> Tout réinitialiser
+          </button>
+        </div>
+      </div>
+    </PageShell>
+  );
+
   // =========================
   // Router switch
   // =========================
@@ -1438,6 +1689,17 @@ const KidsTasksApp = () => {
       {view.name === "manageTasks" && renderManageTasksPage()}
       {view.name === "history" && renderHistoryPage()}
       {view.name === "weeklySummary" && renderWeeklySummaryPage()}
+      {view.name === "settings" && renderSettingsPage()}
+
+      {pinPrompt && (
+        <PinModal
+          mode={pinPrompt.mode}
+          error={pinPrompt.error}
+          busy={pinPrompt.busy}
+          onSubmit={handlePinSubmit}
+          onCancel={() => setPinPrompt(null)}
+        />
+      )}
     </>
   );
 };
