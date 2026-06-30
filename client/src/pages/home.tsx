@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
+import { usePersistentState } from "@/lib/usePersistentState";
 import {
   Plus,
   Trash2,
@@ -111,14 +112,29 @@ const KidsTasksApp = () => {
   // =========================
   // State: Data
   // =========================
-  const [children, setChildren] = useState<Child[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [dailyRewards, setDailyRewards] = useState<DailyReward[]>([]);
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [weeklyRewards, setWeeklyRewards] = useState<WeeklyReward[]>([]);
+  // Données persistées automatiquement dans IndexedDB (clés identiques à
+  // l'ancien localStorage). Le 3e élément `ready` indique que le chargement
+  // initial depuis le disque est terminé.
+  const [children, setChildren, childrenReady] = usePersistentState<Child[]>("children", []);
+  const [tasks, setTasks, tasksReady] = usePersistentState<Task[]>("tasks", []);
+  const [dailyRewards, setDailyRewards, dailyRewardsReady] = usePersistentState<DailyReward[]>("dailyRewards", []);
+  const [challenges, setChallenges, challengesReady] = usePersistentState<Challenge[]>("challenges", []);
+  const [weeklyRewards, setWeeklyRewards, weeklyRewardsReady] = usePersistentState<WeeklyReward[]>("weeklyRewards", []);
+  const [dailyData, setDailyData, dailyDataReady] = usePersistentState<DailyData>("dailyData", {});
+
+  // currentDate reste un état normal (ce n'est pas une donnée à persister).
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [dailyData, setDailyData] = useState<DailyData>({});
   const [showSetup, setShowSetup] = useState(false);
+
+  // Tant que toutes les données ne sont pas chargées, on affiche un écran de
+  // chargement pour éviter un flash d'état vide (puis l'écrasement du disque).
+  const dataReady =
+    childrenReady &&
+    tasksReady &&
+    dailyRewardsReady &&
+    challengesReady &&
+    weeklyRewardsReady &&
+    dailyDataReady;
 
 
   // =========================
@@ -165,31 +181,8 @@ const KidsTasksApp = () => {
     "#85C1E2",
   ];
 
-  // =========================
-  // Persistence
-  // =========================
-  useEffect(() => {
-    const savedChildren = localStorage.getItem("children");
-    const savedTasks = localStorage.getItem("tasks");
-    const savedDailyRewards = localStorage.getItem("dailyRewards");
-    const savedChallenges = localStorage.getItem("challenges");
-    const savedWeeklyRewards = localStorage.getItem("weeklyRewards");
-    const savedDailyData = localStorage.getItem("dailyData");
-
-    if (savedChildren) setChildren(JSON.parse(savedChildren));
-    if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedDailyRewards) setDailyRewards(JSON.parse(savedDailyRewards));
-    if (savedChallenges) setChallenges(JSON.parse(savedChallenges));
-    if (savedWeeklyRewards) setWeeklyRewards(JSON.parse(savedWeeklyRewards));
-    if (savedDailyData) setDailyData(JSON.parse(savedDailyData));
-  }, []);
-
-  useEffect(() => localStorage.setItem("children", JSON.stringify(children)), [children]);
-  useEffect(() => localStorage.setItem("tasks", JSON.stringify(tasks)), [tasks]);
-  useEffect(() => localStorage.setItem("dailyRewards", JSON.stringify(dailyRewards)), [dailyRewards]);
-  useEffect(() => localStorage.setItem("challenges", JSON.stringify(challenges)), [challenges]);
-  useEffect(() => localStorage.setItem("weeklyRewards", JSON.stringify(weeklyRewards)), [weeklyRewards]);
-  useEffect(() => localStorage.setItem("dailyData", JSON.stringify(dailyData)), [dailyData]);
+  // La persistance est désormais automatique via usePersistentState
+  // (chargement initial + écriture à chaque changement gérés par le hook).
 
   // =========================
   // Date utils
@@ -1423,6 +1416,17 @@ const KidsTasksApp = () => {
   // =========================
   // Router switch
   // =========================
+  if (!dataReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 flex items-center justify-center p-4">
+        <div className="text-center text-white">
+          <div className="text-5xl mb-4 animate-bounce">⭐</div>
+          <div className="text-xl font-semibold drop-shadow-lg">Chargement…</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {view.name === "home" && renderHomePage()}
