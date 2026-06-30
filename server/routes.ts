@@ -1,16 +1,16 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { type Server } from "http";
 
+/**
+ * Aucune route applicative.
+ *
+ * Choix local-first : aucune donnée familiale ne transite par le serveur.
+ * Le serveur sert UNIQUEMENT les fichiers statiques (Vite en dev, dossier
+ * `dist` en prod). On ne déclare donc volontairement aucune route /api.
+ */
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  _app: Express,
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
-
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
-
   return httpServer;
 }
