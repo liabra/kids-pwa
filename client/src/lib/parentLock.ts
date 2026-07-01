@@ -19,7 +19,7 @@
  * importAll({}), qui vide le magasin de données de l'app.
  */
 
-import { importAll } from "./db";
+import { importAll, APP_KEYS } from "./db";
 
 const DB_NAME = "champions-lock";
 const DB_VERSION = 1;
@@ -183,6 +183,10 @@ export async function resetAll(): Promise<void> {
   await importAll({}); // vide le magasin de données de l'app
   await clearStore(); // supprime le PIN parent
   try {
+    // Efface aussi les anciennes données localStorage : sinon, comme
+    // migrateFromLocalStorage() ne les supprime jamais (filet de sécurité),
+    // elles réapparaîtraient à la prochaine migration après le reset.
+    for (const key of APP_KEYS) localStorage.removeItem(key);
     localStorage.removeItem("__migrated_to_idb");
   } catch {
     // localStorage indisponible : sans importance ici.
