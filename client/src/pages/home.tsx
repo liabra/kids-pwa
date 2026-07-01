@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { usePersistentState } from "@/lib/usePersistentState";
 import { isPinSet, setPin, verifyPin, resetAll } from "@/lib/parentLock";
 import { exportAll, importAll } from "@/lib/db";
@@ -263,6 +263,30 @@ const KidsTasksApp = () => {
   // Au démarrage, on regarde si un PIN existe déjà sur cet appareil.
   useEffect(() => {
     isPinSet().then(setPinExists).catch(() => setPinExists(false));
+  }, []);
+
+  // Re-verrouillage automatique en arrière-plan (tablette partagée) : dès que
+  // l'app est masquée (changement d'appli, écran éteint, onglet caché), on
+  // repasse en mode enfant. On n'agit QUE si on était en mode parent, pour ne
+  // pas perturber un enfant en train de consulter/cocher (données et saisie
+  // enfant intactes ; le PIN reste requis pour re-déverrouiller ensuite).
+  const parentModeRef = useRef(parentMode);
+  parentModeRef.current = parentMode;
+  useEffect(() => {
+    const lockToChild = () => {
+      if (!parentModeRef.current) return;
+      setParentMode(false);
+      setView({ name: "home", payload: {} });
+    };
+    const onVisibility = () => {
+      if (document.hidden) lockToChild();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", lockToChild);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", lockToChild);
+    };
   }, []);
 
   // =========================
@@ -1834,18 +1858,34 @@ const KidsTasksApp = () => {
     );
   }
 
+  // Garde-fou : les vues sensibles ne s'affichent JAMAIS hors mode parent.
+  // Défense en profondeur (en plus du masquage des boutons) : quelle que soit
+  // la façon dont on quitte le mode parent (verrouillage manuel, auto-verrou en
+  // arrière-plan…), on ne peut pas rester bloqué sur un écran de gestion.
+  const PARENT_ONLY_VIEWS: ViewName[] = [
+    "addChild",
+    "addTask",
+    "addDailyReward",
+    "addChallenge",
+    "addWeeklyReward",
+    "manageTasks",
+    "settings",
+  ];
+  const effectiveView: ViewName =
+    !parentMode && PARENT_ONLY_VIEWS.includes(view.name) ? "home" : view.name;
+
   return (
     <>
-      {view.name === "home" && renderHomePage()}
-      {view.name === "addChild" && renderAddChildPage()}
-      {view.name === "addTask" && renderAddTaskPage()}
-      {view.name === "addDailyReward" && renderAddDailyRewardPage()}
-      {view.name === "addChallenge" && renderAddChallengePage()}
-      {view.name === "addWeeklyReward" && renderAddWeeklyRewardPage()}
-      {view.name === "manageTasks" && renderManageTasksPage()}
-      {view.name === "history" && renderHistoryPage()}
-      {view.name === "weeklySummary" && renderWeeklySummaryPage()}
-      {view.name === "settings" && renderSettingsPage()}
+      {effectiveView === "home" && renderHomePage()}
+      {effectiveView === "addChild" && renderAddChildPage()}
+      {effectiveView === "addTask" && renderAddTaskPage()}
+      {effectiveView === "addDailyReward" && renderAddDailyRewardPage()}
+      {effectiveView === "addChallenge" && renderAddChallengePage()}
+      {effectiveView === "addWeeklyReward" && renderAddWeeklyRewardPage()}
+      {effectiveView === "manageTasks" && renderManageTasksPage()}
+      {effectiveView === "history" && renderHistoryPage()}
+      {effectiveView === "weeklySummary" && renderWeeklySummaryPage()}
+      {effectiveView === "settings" && renderSettingsPage()}
 
       {pinPrompt && (
         <PinModal
