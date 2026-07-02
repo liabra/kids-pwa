@@ -233,17 +233,19 @@ function useAppStateValue() {
   // Daily completion
   // =========================
   const ensureDailySlot = (data: DailyData, dateKey: string, childId: ID): DailyData => {
+    // Clone immuable de tout le chemin touché (jour → enfant → sous-objets),
+    // pour ne jamais muter l'état précédent. Les autres enfants du même jour
+    // sont préservés (day copie tout le jour, on ne remplace que day[childId]).
     const copy: DailyData = { ...data };
-
-    if (!copy[dateKey]) copy[dateKey] = {};
-    if (!copy[dateKey][childId]) {
-      copy[dateKey][childId] = {
-        completedTasks: {},
-        activeChallenges: {},
-        claimedWeeklyRewards: [],
-      };
-    }
-
+    const day = { ...(copy[dateKey] ?? {}) };
+    const prevSlot = day[childId];
+    day[childId] = {
+      ...prevSlot,
+      completedTasks: { ...(prevSlot?.completedTasks ?? {}) },
+      activeChallenges: { ...(prevSlot?.activeChallenges ?? {}) },
+      claimedWeeklyRewards: [ ...(prevSlot?.claimedWeeklyRewards ?? []) ],
+    };
+    copy[dateKey] = day;
     return copy;
   };
 
@@ -373,6 +375,7 @@ function useAppStateValue() {
     setDailyData(prev => {
       const copy: DailyData = { ...prev };
       for (const dateKey of Object.keys(copy)) {
+        copy[dateKey] = { ...copy[dateKey] };
         for (const childIdStr of Object.keys(copy[dateKey])) {
           const childId = Number(childIdStr);
           const slot = copy[dateKey][childId];
@@ -401,6 +404,7 @@ function useAppStateValue() {
     setDailyData(prev => {
       const copy: DailyData = { ...prev };
       for (const dateKey of Object.keys(copy)) {
+        copy[dateKey] = { ...copy[dateKey] };
         for (const childIdStr of Object.keys(copy[dateKey])) {
           const childId = Number(childIdStr);
           const slot = copy[dateKey][childId];
@@ -424,6 +428,7 @@ function useAppStateValue() {
     setDailyData(prev => {
       const copy: DailyData = { ...prev };
       for (const dateKey of Object.keys(copy)) {
+        copy[dateKey] = { ...copy[dateKey] };
         for (const childIdStr of Object.keys(copy[dateKey])) {
           const childId = Number(childIdStr);
           const slot = copy[dateKey][childId];
