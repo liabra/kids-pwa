@@ -5,6 +5,11 @@ import { AppStateProvider, useAppState } from "@/context/AppStateContext";
 import PageShell from "@/components/PageShell";
 import HistoryPage from "@/views/HistoryPage";
 import WeeklySummaryPage from "@/views/WeeklySummaryPage";
+import AddChildPage from "@/views/AddChildPage";
+import AddTaskPage from "@/views/AddTaskPage";
+import AddDailyRewardPage from "@/views/AddDailyRewardPage";
+import AddChallengePage from "@/views/AddChallengePage";
+import AddWeeklyRewardPage from "@/views/AddWeeklyRewardPage";
 import { isPinSet, setPin, verifyPin, resetAll } from "@/lib/parentLock";
 import { exportAll, importAll } from "@/lib/db";
 import {
@@ -741,192 +746,6 @@ const AppShell = () => {
     </div>   
   );
 
-  const renderAddChildPage = () => (
-    <PageShell title="Ajouter un enfant" onHome={goHome}>
-      <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
-        <h3 className="text-2xl font-bold mb-4">Nouvel enfant</h3>
-        <input
-          type="text"
-          placeholder="Nom de l'enfant"
-          value={newChildName}
-          onChange={(e) => setNewChildName(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-          onKeyDown={(e) => e.key === "Enter" && addChild()}
-        />
-        <div className="mb-4">
-          <label className="block text-sm font-semibold mb-2">Couleur:</label>
-          <div className="grid grid-cols-4 gap-2">
-            {colors.map((color) => (
-              <button
-                key={color}
-                onClick={() => setNewChildColor(color)}
-                className={`w-full h-12 rounded-lg border-4 transition ${
-                  newChildColor === color ? "border-gray-800 scale-110" : "border-transparent"
-                }`}
-                style={{ backgroundColor: color }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={addChild} className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition">
-            Ajouter
-          </button>
-          <button
-            onClick={() => {
-              setNewChildName("");
-              goHome();
-            }}
-            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
-    </PageShell>
-  );
-
-  const renderAddTaskPage = () => (
-    <PageShell title="Ajouter une tâche" onHome={goHome}>
-      <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
-        <h3 className="text-2xl font-bold mb-4">Nouvelle tâche</h3>
-        <input
-          type="text"
-          placeholder="Nom de la tâche"
-          value={newTaskName}
-          onChange={(e) => setNewTaskName(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-          onKeyDown={(e) => e.key === "Enter" && addTask()}
-        />
-        <div className="flex gap-2">
-          <button onClick={addTask} className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-            Ajouter
-          </button>
-          <button
-            onClick={() => {
-              setNewTaskName("");
-              goHome();
-            }}
-            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
-    </PageShell>
-  );
-
-  const renderAddDailyRewardPage = () => (
-    <PageShell title="Ajouter une récompense quotidienne" onHome={goHome}>
-      <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
-        <h3 className="text-2xl font-bold mb-4">Nouvelle récompense</h3>
-        <input
-          type="text"
-          placeholder="Nom de la récompense"
-          value={newRewardName}
-          onChange={(e) => setNewRewardName(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-        />
-        <input
-          type="number"
-          placeholder="Points requis"
-          value={newRewardPoints}
-          onChange={(e) => setNewRewardPoints(parseInt(e.target.value) || 0)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-        />
-        <div className="flex gap-2">
-          <button onClick={addDailyReward} className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
-            Ajouter
-          </button>
-          <button
-            onClick={() => {
-              setNewRewardName("");
-              setNewRewardPoints(5);
-              goHome();
-            }}
-            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
-    </PageShell>
-  );
-
-  const renderAddChallengePage = () => (
-    <PageShell title="Ajouter un défi" onHome={goHome}>
-      <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
-        <h3 className="text-2xl font-bold mb-4">Nouveau défi</h3>
-        <input
-          type="text"
-          placeholder="Nom du défi"
-          value={newChallengeName}
-          onChange={(e) => setNewChallengeName(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-        />
-        <input
-          type="number"
-          placeholder="Points perdus si raté"
-          value={newChallengePoints}
-          onChange={(e) => setNewChallengePoints(parseInt(e.target.value) || 0)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-        />
-        <div className="flex gap-2">
-          <button onClick={addChallenge} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
-            Ajouter
-          </button>
-          <button
-            onClick={() => {
-              setNewChallengeName("");
-              setNewChallengePoints(2);
-              goHome();
-            }}
-            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
-    </PageShell>
-  );
-
-  const renderAddWeeklyRewardPage = () => (
-    <PageShell title="Ajouter une récompense hebdomadaire" onHome={goHome}>
-      <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
-        <h3 className="text-2xl font-bold mb-4">Nouvelle récompense hebdo</h3>
-        <input
-          type="text"
-          placeholder="Nom de la récompense"
-          value={newWeeklyRewardName}
-          onChange={(e) => setNewWeeklyRewardName(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-        />
-        <input
-          type="number"
-          placeholder="Points requis (semaine)"
-          value={newWeeklyRewardPoints}
-          onChange={(e) => setNewWeeklyRewardPoints(parseInt(e.target.value) || 0)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
-        />
-        <div className="flex gap-2">
-          <button onClick={addWeeklyReward} className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition">
-            Ajouter
-          </button>
-          <button
-            onClick={() => {
-              setNewWeeklyRewardName("");
-              setNewWeeklyRewardPoints(20);
-              goHome();
-            }}
-            className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
-    </PageShell>
-  );
-
   const renderManageTasksPage = () => {
     if (!selectedChild) return <PageShell title="Gérer les tâches" onHome={goHome}>Enfant introuvable.</PageShell>;
 
@@ -1174,11 +993,11 @@ const AppShell = () => {
   return (
     <>
       {effectiveView === "home" && renderHomePage()}
-      {effectiveView === "addChild" && renderAddChildPage()}
-      {effectiveView === "addTask" && renderAddTaskPage()}
-      {effectiveView === "addDailyReward" && renderAddDailyRewardPage()}
-      {effectiveView === "addChallenge" && renderAddChallengePage()}
-      {effectiveView === "addWeeklyReward" && renderAddWeeklyRewardPage()}
+      {effectiveView === "addChild" && <AddChildPage />}
+      {effectiveView === "addTask" && <AddTaskPage />}
+      {effectiveView === "addDailyReward" && <AddDailyRewardPage />}
+      {effectiveView === "addChallenge" && <AddChallengePage />}
+      {effectiveView === "addWeeklyReward" && <AddWeeklyRewardPage />}
       {effectiveView === "manageTasks" && renderManageTasksPage()}
       {effectiveView === "history" && <HistoryPage />}
       {effectiveView === "weeklySummary" && <WeeklySummaryPage requireParent={requireParent} />}
