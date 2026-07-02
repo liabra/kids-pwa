@@ -10,6 +10,14 @@ import type {
   Challenge,
   DailyData,
 } from "@/lib/types";
+import {
+  formatDate,
+  getDayName,
+  getWeekStart,
+  getWeekDates,
+  getDailyPoints as computeDailyPoints,
+  getWeeklyPoints as computeWeeklyPoints,
+} from "@/lib/points";
 import { usePersistentState } from "@/lib/usePersistentState";
 import { isPinSet, setPin, verifyPin, resetAll } from "@/lib/parentLock";
 import { exportAll, importAll } from "@/lib/db";
@@ -346,33 +354,8 @@ const KidsTasksApp = () => {
   // (chargement initial + écriture à chaque changement gérés par le hook).
 
   // =========================
-  // Date utils
+  // Date utils (helpers purs importés depuis lib/points)
   // =========================
-  const formatDate = (date: Date) => date.toISOString().split("T")[0];
-
-  const getDayName = (date: Date) => {
-    const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-    return days[date.getDay()];
-  };
-
-  const getWeekStart = (date: Date) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
-  };
-
-  const getWeekDates = (date: Date): Date[] => {
-    const weekStart = getWeekStart(date);
-    const dates: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      dates.push(d);
-    }
-    return dates;
-  };
-
   const goToPreviousDay = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() - 1);
@@ -727,34 +710,13 @@ const KidsTasksApp = () => {
   };
 
   // =========================
-  // Points
+  // Points (wrappers liés à l'état, autour des fonctions pures de lib/points)
   // =========================
-  const getDailyPoints = (childId: ID, date: Date): number => {
-    const dateKey = formatDate(date);
-    const childData = dailyData[dateKey]?.[childId];
-    if (!childData) return 0;
+  const getDailyPoints = (childId: ID, date: Date): number =>
+    computeDailyPoints(dailyData, challenges, childId, date);
 
-    let points = 0;
-
-    Object.values(childData.completedTasks || {}).forEach((completed) => {
-      if (completed) points += 1;
-    });
-
-    Object.entries(childData.activeChallenges || {}).forEach(([challengeId, status]) => {
-      if (status === "success") points += 1;
-      if (status === "failed") {
-        const challenge = challenges.find((c) => c.id === Number(challengeId));
-        if (challenge) points -= challenge.pointsLost;
-      }
-    });
-
-    return points;
-  };
-
-  const getWeeklyPoints = (childId: ID): number => {
-    const weekDates = getWeekDates(currentDate);
-    return weekDates.reduce((acc, d) => acc + getDailyPoints(childId, d), 0);
-  };
+  const getWeeklyPoints = (childId: ID): number =>
+    computeWeeklyPoints(dailyData, challenges, childId, currentDate);
 
   const getTierInfo = (points: number) => {
     if (points >= 15) return { icon: Flame, color: "text-orange-500", label: "En feu!", animation: "animate-pulse" };
