@@ -34,6 +34,9 @@ export type Child = {
 export type Task = {
   id: ID;
   name: string;
+  // Pictogramme optionnel (clé stable du catalogue, ex. "teeth"). Sérialisable.
+  // Rétrocompatible : les tâches existantes sans ce champ restent valides.
+  icon?: string;
 };
 
 export type DailyReward = {
