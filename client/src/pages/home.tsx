@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import type { ViewName } from "@/lib/types";
 import { formatDate, getDayName, getWeekDates } from "@/lib/points";
 import { AppStateProvider, useAppState } from "@/context/AppStateContext";
+import PageShell from "@/components/PageShell";
+import HistoryPage from "@/views/HistoryPage";
 import { isPinSet, setPin, verifyPin, resetAll } from "@/lib/parentLock";
 import { exportAll, importAll } from "@/lib/db";
 import {
@@ -26,37 +28,6 @@ import {
   Download,
   Upload,
 } from "lucide-react";
-
-const PageShell = ({
-  title,
-  onHome,
-  children,
-}: {
-  title: string;
-  onHome: () => void;
-  children: React.ReactNode;
-}) => (
-  <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 p-4">
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg p-4 mb-6 flex items-center justify-between gap-3">
-        <button
-          onClick={onHome}
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
-        >
-          ← Accueil
-        </button>
-
-        <div className="text-center flex-1">
-          <div className="text-xl md:text-2xl font-bold text-gray-800">{title}</div>
-        </div>
-
-        <div className="w-[96px]" />
-      </div>
-
-      {children}
-    </div>
-  </div>
-);
 
 /**
  * Modale de saisie du code PIN parent.
@@ -986,59 +957,6 @@ const AppShell = () => {
     );
   };
 
-  const renderHistoryPage = () => {
-    if (!selectedChild) return <PageShell title="Historique" onHome={goHome}>Enfant introuvable.</PageShell>;
-
-    return (
-      <PageShell title={`Historique - ${selectedChild.name}`} onHome={goHome}>
-        <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
-          {/* ✅ Bouton Aujourd’hui pour l’historique */}
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={goToToday}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2"
-            >
-              <Calendar size={18} />
-              Aujourd&apos;hui
-            </button>
-            <button
-              onClick={goHome}
-              className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-            >
-              Fermer
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            {getWeekDates(currentDate).map((date) => {
-              const points = getDailyPoints(selectedChild.id, date);
-              const isCurrentDate = formatDate(date) === formatDate(currentDate);
-              const bgColor = points > 0 ? "bg-green-100" : points < 0 ? "bg-red-100" : "bg-gray-100";
-              const textColor = points > 0 ? "text-green-800" : points < 0 ? "text-red-800" : "text-gray-600";
-
-              return (
-                <div
-                  key={formatDate(date)}
-                  className={`${bgColor} p-3 rounded-lg ${isCurrentDate ? "ring-2 ring-blue-500" : ""}`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-semibold text-gray-800">
-                        {getDayName(date)} {isCurrentDate && "(Sélectionné)"}
-                      </div>
-                      <div className="text-sm text-gray-600">{date.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</div>
-                    </div>
-                    <div className={`text-2xl font-bold ${textColor}`}>{points > 0 ? "+" : ""}{points}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </PageShell>
-    );
-  };
-
   const renderWeeklySummaryPage = () => (
     <PageShell title="Résumé de la semaine" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -1346,7 +1264,7 @@ const AppShell = () => {
       {effectiveView === "addChallenge" && renderAddChallengePage()}
       {effectiveView === "addWeeklyReward" && renderAddWeeklyRewardPage()}
       {effectiveView === "manageTasks" && renderManageTasksPage()}
-      {effectiveView === "history" && renderHistoryPage()}
+      {effectiveView === "history" && <HistoryPage />}
       {effectiveView === "weeklySummary" && renderWeeklySummaryPage()}
       {effectiveView === "settings" && renderSettingsPage()}
 
