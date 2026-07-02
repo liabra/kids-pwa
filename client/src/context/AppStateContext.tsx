@@ -77,6 +77,7 @@ function useAppStateValue() {
   const [newChildColor, setNewChildColor] = useState("#FF6B6B");
 
   const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskIcon, setNewTaskIcon] = useState("");
 
   const [newRewardName, setNewRewardName] = useState("");
   const [newRewardPoints, setNewRewardPoints] = useState(5);
@@ -182,9 +183,10 @@ function useAppStateValue() {
   const addTask = () => {
     if (!newTaskName.trim()) return;
 
-    const newTask = { id: Date.now(), name: newTaskName.trim() };
+    const newTask = { id: Date.now(), name: newTaskName.trim(), icon: newTaskIcon || undefined };
     setTasks((prev) => [...prev, newTask]);
     setNewTaskName("");
+    setNewTaskIcon("");
     goHome();
   };
 
@@ -504,6 +506,7 @@ function useAppStateValue() {
     newChildName, setNewChildName,
     newChildColor, setNewChildColor,
     newTaskName, setNewTaskName,
+    newTaskIcon, setNewTaskIcon,
     newRewardName, setNewRewardName,
     newRewardPoints, setNewRewardPoints,
     newChallengeName, setNewChallengeName,
