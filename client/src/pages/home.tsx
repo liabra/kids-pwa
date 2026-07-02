@@ -1,4 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import type {
+  ID,
+  ViewName,
+  ViewState,
+  Child,
+  Task,
+  DailyReward,
+  WeeklyReward,
+  Challenge,
+  DailyData,
+} from "@/lib/types";
 import { usePersistentState } from "@/lib/usePersistentState";
 import { isPinSet, setPin, verifyPin, resetAll } from "@/lib/parentLock";
 import { exportAll, importAll } from "@/lib/db";
@@ -29,65 +40,6 @@ import {
   Unlock,
   Settings,
 } from "lucide-react";
-
-  type ID = number;
-  type ChallengeStatus = "active" | "success" | "failed";
-
-  type ViewName =
-    | "home"
-    | "addChild"
-    | "addTask"
-    | "addDailyReward"
-    | "addChallenge"
-    | "addWeeklyReward"
-    | "manageTasks"
-    | "history"
-    | "weeklySummary"
-    | "settings";
-
-  type ViewState = {
-    name: ViewName;
-    payload: { childId?: ID };
-  };
-
-  type Child = {
-    id: ID;
-    name: string;
-    color: string;
-    assignedTasks: ID[];
-  };
-
-  type Task = {
-    id: ID;
-    name: string;
-  };
-
-  type DailyReward = {
-    id: ID;
-    name: string;
-    points: number;
-  };
-
-  type WeeklyReward = {
-    id: ID;
-    name: string;
-    points: number;
-  };
-
-  type Challenge = {
-    id: ID;
-    name: string;
-    pointsLost: number;
-  };
-
-  type ChildDayData = {
-    completedTasks: Record<ID, boolean>;
-    activeChallenges: Record<ID, ChallengeStatus>;
-    claimedWeeklyRewards: ID[];
-  };
-
-  // dailyData[dateKey][childId] = ChildDayData
-  type DailyData = Record<string, Record<ID, ChildDayData>>;
 
 const PageShell = ({
   title,
