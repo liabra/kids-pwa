@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAppState } from "@/context/AppStateContext";
 import { getDayName } from "@/lib/points";
+import { celebrate } from "@/lib/celebrate";
 import TaskIcon from "@/components/TaskIcon";
 
 const HomePage = ({
@@ -47,6 +48,7 @@ const HomePage = ({
     removeDailyReward, removeWeeklyReward,
     clearAllTasks, clearAllDailyRewards, clearAllChallenges, clearAllWeeklyRewards,
     getDailyPoints, getWeeklyPoints, getTierInfo,
+    soundEnabled,
   } = useAppState();
 
   return (
@@ -356,7 +358,12 @@ const HomePage = ({
                           <input
                             type="checkbox"
                             checked={isTaskCompleted(child.id, task.id)}
-                            onChange={() => toggleTaskCompletion(child.id, task.id)}
+                            onChange={() => {
+                              // On célèbre uniquement au passage non-coché -> coché.
+                              const wasCompleted = isTaskCompleted(child.id, task.id);
+                              toggleTaskCompletion(child.id, task.id);
+                              if (!wasCompleted) celebrate({ sound: soundEnabled });
+                            }}
                             className="w-5 h-5 text-green-500 rounded focus:ring-2 focus:ring-green-400"
                           />
                           <TaskIcon iconKey={task.icon} size={24} />
