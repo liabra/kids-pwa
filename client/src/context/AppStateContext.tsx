@@ -46,6 +46,11 @@ function useAppStateValue() {
   const [weeklyRewards, setWeeklyRewards, weeklyRewardsReady] = usePersistentState<WeeklyReward[]>("weeklyRewards", []);
   const [dailyData, setDailyData, dailyDataReady] = usePersistentState<DailyData>("dailyData", {});
 
+  // Réglage son on/off (persisté). Clé volontairement HORS de APP_KEYS (db.ts) :
+  // aucune migration nécessaire ; elle sera juste incluse dans les sauvegardes,
+  // sans conséquence. Non incluse dans dataReady (simple préférence, défaut true).
+  const [soundEnabled, setSoundEnabled] = usePersistentState<boolean>("soundEnabled", true);
+
   // currentDate reste un état normal (ce n'est pas une donnée à persister).
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [showSetup, setShowSetup] = useState(false);
@@ -505,6 +510,7 @@ function useAppStateValue() {
     weeklyRewards, setWeeklyRewards,
     dailyData, setDailyData,
     dataReady,
+    soundEnabled, setSoundEnabled,
     currentDate, setCurrentDate,
     showSetup, setShowSetup,
     view, setView, go, goHome,

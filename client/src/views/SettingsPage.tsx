@@ -7,7 +7,7 @@
  * détenu par home.tsx et est reçu en prop.
  */
 import { useState } from "react";
-import { Lock, Download, Upload, Trash2 } from "lucide-react";
+import { Lock, Download, Upload, Trash2, Volume2, VolumeX } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { useAppState } from "@/context/AppStateContext";
 import { exportAll, importAll } from "@/lib/db";
@@ -19,7 +19,7 @@ import {
 import { resetAll } from "@/lib/parentLock";
 
 const SettingsPage = ({ lockParent }: { lockParent: () => void }) => {
-  const { goHome } = useAppState();
+  const { goHome, soundEnabled, setSoundEnabled } = useAppState();
 
   const [backupPass, setBackupPass] = useState("");
   const [backupPassConfirm, setBackupPassConfirm] = useState("");
@@ -115,6 +115,36 @@ const SettingsPage = ({ lockParent }: { lockParent: () => void }) => {
           >
             <Lock size={18} /> Verrouiller (mode enfant)
           </button>
+        </div>
+
+        {/* Sons */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />} Sons
+              </h3>
+              <p className="text-sm text-gray-600">
+                Petit carillon quand un enfant termine une tâche.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={soundEnabled}
+              aria-label="Activer les sons"
+              onClick={() => setSoundEnabled((v) => !v)}
+              className={`relative shrink-0 w-14 h-8 rounded-full transition-colors ${
+                soundEnabled ? "bg-green-500" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                  soundEnabled ? "translate-x-6" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Sauvegarde chiffrée */}
