@@ -3,6 +3,7 @@
  * Déplacé depuis home.tsx (renderManageTasksPage) sans modification.
  */
 import PageShell from "@/components/PageShell";
+import TaskIcon from "@/components/TaskIcon";
 import { useAppState } from "@/context/AppStateContext";
 
 const ManageTasksPage = () => {
@@ -25,6 +26,7 @@ const ManageTasksPage = () => {
                   onChange={() => toggleTaskAssignment(selectedChild.id, task.id)}
                   className="w-5 h-5 text-blue-500 rounded"
                 />
+                <TaskIcon iconKey={task.icon} size={18} />
                 <span className="text-gray-800">{task.name}</span>
               </label>
             );

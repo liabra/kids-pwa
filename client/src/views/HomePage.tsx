@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAppState } from "@/context/AppStateContext";
 import { getDayName } from "@/lib/points";
+import TaskIcon from "@/components/TaskIcon";
 
 const HomePage = ({
   parentMode,
@@ -358,6 +359,7 @@ const HomePage = ({
                             onChange={() => toggleTaskCompletion(child.id, task.id)}
                             className="w-5 h-5 text-green-500 rounded focus:ring-2 focus:ring-green-400"
                           />
+                          <TaskIcon iconKey={task.icon} size={24} />
                           <span
                             className={`text-sm ${
                               isTaskCompleted(child.id, task.id) ? "line-through text-gray-500" : "text-gray-800"
@@ -431,7 +433,10 @@ const HomePage = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {tasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                  <span className="text-gray-800">{task.name}</span>
+                  <span className="flex items-center gap-2 text-gray-800">
+                    <TaskIcon iconKey={task.icon} size={18} />
+                    {task.name}
+                  </span>
                   <button onClick={() => removeTask(task.id)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={16} />
                   </button>
