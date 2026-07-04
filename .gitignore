@@ -4,3 +4,12 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Capacitor / Android — artefacts de build (le projet natif android/ reste commité)
+android/app/build/
+android/.gradle/
+android/local.properties
+# Secrets de signature — NE JAMAIS committer
+*.keystore
+*.jks
+keystore.properties

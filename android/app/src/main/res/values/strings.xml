@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tableau des Champions</string>
+    <string name="title_activity_main">Tableau des Champions</string>
+    <string name="package_name">com.tableaudeschampions.app</string>
+    <string name="custom_url_scheme">com.tableaudeschampions.app</string>
+</resources>
