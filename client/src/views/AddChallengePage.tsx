@@ -16,16 +16,26 @@ const AddChallengePage = () => {
     <PageShell title="Ajouter un défi" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouveau défi</h3>
+        <label htmlFor="challenge-name" className="block text-sm font-semibold mb-2">
+          Nom du défi
+        </label>
         <input
+          id="challenge-name"
           type="text"
-          placeholder="Nom du défi"
+          placeholder="Ex. : Se lever au premier réveil"
           value={newChallengeName}
           onChange={(e) => setNewChallengeName(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
         />
+        <label htmlFor="challenge-points" className="block text-sm font-semibold mb-1">
+          Points perdus si le défi est raté
+        </label>
+        <p className="text-xs text-gray-500 mb-2">Un défi réussi rapporte +1 point. Garde cette pénalité à 1 ou 2, sinon le pari devient décourageant.</p>
         <input
+          id="challenge-points"
           type="number"
-          placeholder="Points perdus si raté"
+          min={0}
+          placeholder="Ex. : 1"
           value={newChallengePoints}
           onChange={(e) => setNewChallengePoints(parseInt(e.target.value) || 0)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"

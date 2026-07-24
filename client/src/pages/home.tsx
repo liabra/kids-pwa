@@ -142,23 +142,48 @@ const AppShell = () => {
     isPinSet().then(setPinExists).catch(() => setPinExists(false));
   }, []);
 
-  // Re-verrouillage automatique en arrière-plan (tablette partagée) : dès que
+  // Re-verrouillage automatique en arrière-plan (tablette partagée) : quand
   // l'app est masquée (changement d'appli, écran éteint, onglet caché), on
   // repasse en mode enfant. On n'agit QUE si on était en mode parent, pour ne
-  // pas perturber un enfant en train de consulter/cocher (données et saisie
-  // enfant intactes ; le PIN reste requis pour re-déverrouiller ensuite).
+  // pas perturber un enfant en train de consulter/déplacer ses tâches.
+  //
+  // Délai de grâce : un aller-retour bref (consulter une autre appli pendant
+  // qu'on paramètre) ne redemande pas le PIN. Au-delà, verrouillage.
+  //
+  // Ce délai vit UNIQUEMENT en mémoire, et c'est délibéré : rien n'est écrit
+  // sur le disque. Si Android détruit la WebView, l'app repart de zéro et le
+  // PIN est redemandé, quel que soit le temps écoulé. Persister un jeton de
+  // déverrouillage donnerait le confort dans ce cas aussi, mais permettrait à
+  // un enfant relançant l'app d'entrer directement en mode parent.
+  //
+  // performance.now() est monotone : insensible à un changement d'heure système.
+  const AUTO_LOCK_GRACE_MS = 90_000;
+
   const parentModeRef = useRef(parentMode);
   parentModeRef.current = parentMode;
+  const hiddenAtRef = useRef<number | null>(null);
+
   useEffect(() => {
     const lockToChild = () => {
+      hiddenAtRef.current = null;
       if (!parentModeRef.current) return;
       setParentMode(false);
       goHome();
     };
     const onVisibility = () => {
-      if (document.hidden) lockToChild();
+      if (document.hidden) {
+        // On mémorise l'instant du masquage sans verrouiller tout de suite.
+        hiddenAtRef.current = parentModeRef.current ? performance.now() : null;
+        return;
+      }
+      const hiddenAt = hiddenAtRef.current;
+      hiddenAtRef.current = null;
+      if (hiddenAt !== null && performance.now() - hiddenAt > AUTO_LOCK_GRACE_MS) {
+        lockToChild();
+      }
     };
     document.addEventListener("visibilitychange", onVisibility);
+    // pagehide = la page s'en va pour de bon : on verrouille sans délai.
     window.addEventListener("pagehide", lockToChild);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);

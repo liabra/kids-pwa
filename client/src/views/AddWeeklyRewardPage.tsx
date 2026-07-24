@@ -18,16 +18,26 @@ const AddWeeklyRewardPage = () => {
     <PageShell title="Ajouter une récompense hebdomadaire" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle récompense hebdo</h3>
+        <label htmlFor="weekly-reward-name" className="block text-sm font-semibold mb-2">
+          Nom de la récompense
+        </label>
         <input
+          id="weekly-reward-name"
           type="text"
-          placeholder="Nom de la récompense"
+          placeholder="Ex. : Switch 45 min le dimanche"
           value={newWeeklyRewardName}
           onChange={(e) => setNewWeeklyRewardName(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
         />
+        <label htmlFor="weekly-reward-points" className="block text-sm font-semibold mb-1">
+          Points à atteindre sur la semaine
+        </label>
+        <p className="text-xs text-gray-500 mb-2">Vise environ 70 % d'une semaine parfaite : un seul mauvais jour ne doit pas condamner la semaine.</p>
         <input
+          id="weekly-reward-points"
           type="number"
-          placeholder="Points requis (semaine)"
+          min={0}
+          placeholder="Ex. : 42"
           value={newWeeklyRewardPoints}
           onChange={(e) => setNewWeeklyRewardPoints(parseInt(e.target.value) || 0)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"

@@ -16,9 +16,13 @@ const AddChildPage = () => {
     <PageShell title="Ajouter un enfant" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvel enfant</h3>
+        <label htmlFor="child-name" className="block text-sm font-semibold mb-2">
+          Nom de l&apos;enfant
+        </label>
         <input
+          id="child-name"
           type="text"
-          placeholder="Nom de l'enfant"
+          placeholder="Ex. : Lina"
           value={newChildName}
           onChange={(e) => setNewChildName(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"

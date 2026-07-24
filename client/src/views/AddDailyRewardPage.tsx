@@ -18,16 +18,26 @@ const AddDailyRewardPage = () => {
     <PageShell title="Ajouter une récompense quotidienne" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle récompense</h3>
+        <label htmlFor="daily-reward-name" className="block text-sm font-semibold mb-2">
+          Nom de la récompense
+        </label>
         <input
+          id="daily-reward-name"
           type="text"
-          placeholder="Nom de la récompense"
+          placeholder="Ex. : Choisir l'histoire du soir"
           value={newRewardName}
           onChange={(e) => setNewRewardName(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
         />
+        <label htmlFor="daily-reward-points" className="block text-sm font-semibold mb-1">
+          Points à atteindre dans la journée
+        </label>
+        <p className="text-xs text-gray-500 mb-2">La récompense s'affiche dès que l'enfant atteint ce total sur la journée.</p>
         <input
+          id="daily-reward-points"
           type="number"
-          placeholder="Points requis"
+          min={0}
+          placeholder="Ex. : 6"
           value={newRewardPoints}
           onChange={(e) => setNewRewardPoints(parseInt(e.target.value) || 0)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"

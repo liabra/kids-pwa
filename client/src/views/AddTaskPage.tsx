@@ -4,6 +4,7 @@
  */
 import PageShell from "@/components/PageShell";
 import IconPicker from "@/components/IconPicker";
+import { getTaskIconLabel } from "@/lib/iconCatalog";
 import { useAppState } from "@/context/AppStateContext";
 
 const AddTaskPage = () => {
@@ -13,6 +14,19 @@ const AddTaskPage = () => {
     newTaskPoints, setNewTaskPoints,
     addTask, goHome,
   } = useAppState();
+
+  /**
+   * Choisir un pictogramme pré-remplit le nom de la tâche, mais JAMAIS au
+   * détriment d'une saisie manuelle : on ne réécrit que si le champ est vide
+   * ou s'il contient encore le libellé posé par le pictogramme précédent.
+   */
+  const handleIconChange = (key: string) => {
+    const previousLabel = getTaskIconLabel(newTaskIcon);
+    const current = newTaskName.trim();
+    const untouched = current === "" || current === previousLabel;
+    setNewTaskIcon(key);
+    if (untouched) setNewTaskName(getTaskIconLabel(key));
+  };
 
   const VALUES = [
     { points: 1, label: "Routine", hint: "geste quotidien" },
@@ -24,16 +38,20 @@ const AddTaskPage = () => {
     <PageShell title="Ajouter une tâche" onHome={goHome}>
       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
         <h3 className="text-2xl font-bold mb-4">Nouvelle tâche</h3>
+        <label htmlFor="task-name" className="block text-sm font-semibold mb-2">
+          Nom de la tâche
+        </label>
         <input
+          id="task-name"
           type="text"
-          placeholder="Nom de la tâche"
+          placeholder="Ex. : Ranger sa chambre"
           value={newTaskName}
           onChange={(e) => setNewTaskName(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
           onKeyDown={(e) => e.key === "Enter" && addTask()}
         />
 
-        <label className="block text-sm font-semibold mb-2">Valeur de la tâche :</label>
+        <label className="block text-sm font-semibold mb-2">Valeur de la tâche</label>
         <div className="grid grid-cols-3 gap-2 mb-4">
           {VALUES.map((v) => (
             <button
@@ -54,9 +72,12 @@ const AddTaskPage = () => {
           ))}
         </div>
 
-        <label className="block text-sm font-semibold mb-2">Pictogramme (optionnel) :</label>
+        <label className="block text-sm font-semibold mb-1">Pictogramme (optionnel)</label>
+        <p className="text-xs text-gray-500 mb-2">
+          Choisir un pictogramme remplit le nom automatiquement. Tu peux le modifier ensuite.
+        </p>
         <div className="mb-4">
-          <IconPicker value={newTaskIcon} onChange={setNewTaskIcon} />
+          <IconPicker value={newTaskIcon} onChange={handleIconChange} />
         </div>
 
         <div className="flex gap-2">

@@ -67,6 +67,15 @@ const ICON_BY_KEY: Record<string, LucideIcon> = Object.fromEntries(
 );
 
 /**
+ * Libellé français d'un pictogramme. Chaîne vide si la clé est absente ou
+ * inconnue — permet de s'en servir directement pour pré-remplir un champ.
+ */
+export function getTaskIconLabel(key?: string): string {
+  if (!key) return "";
+  return ICON_CATALOG.find((entry) => entry.key === key)?.label ?? "";
+}
+
+/**
  * Renvoie le composant d'icône correspondant à une clé, ou null si la clé est
  * absente ou inconnue (tâche sans pictogramme, ou clé d'une version future).
  */
