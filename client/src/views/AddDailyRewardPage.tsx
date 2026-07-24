@@ -3,12 +3,14 @@
  * Déplacé depuis home.tsx sans modification.
  */
 import PageShell from "@/components/PageShell";
+import RewardOwnerPicker from "@/components/RewardOwnerPicker";
 import { useAppState } from "@/context/AppStateContext";
 
 const AddDailyRewardPage = () => {
   const {
     newRewardName, setNewRewardName,
     newRewardPoints, setNewRewardPoints,
+    newRewardChildId, setNewRewardChildId,
     addDailyReward, goHome,
   } = useAppState();
 
@@ -30,6 +32,8 @@ const AddDailyRewardPage = () => {
           onChange={(e) => setNewRewardPoints(parseInt(e.target.value) || 0)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
         />
+        <RewardOwnerPicker value={newRewardChildId} onChange={setNewRewardChildId} />
+
         <div className="flex gap-2">
           <button onClick={addDailyReward} className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
             Ajouter
@@ -38,6 +42,7 @@ const AddDailyRewardPage = () => {
             onClick={() => {
               setNewRewardName("");
               setNewRewardPoints(5);
+              setNewRewardChildId(null);
               goHome();
             }}
             className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"

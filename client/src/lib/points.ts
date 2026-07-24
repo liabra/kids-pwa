@@ -6,7 +6,7 @@
  * dépendent (dailyData, challenges) au lieu de fermer sur l'état d'un composant.
  */
 
-import type { Challenge, DailyData, ID } from "./types";
+import type { Challenge, DailyData, DailyReward, ID, Task, WeeklyReward } from "./types";
 
 /* ------------------------------------------------------------------ */
 /* Dates                                                               */
@@ -41,8 +41,24 @@ export const getWeekDates = (date: Date): Date[] => {
 /* Points                                                              */
 /* ------------------------------------------------------------------ */
 
+/** Valeur d'une tâche. Absence de `points` = 1 (rétrocompatibilité). */
+export const taskValue = (task?: Task): number => {
+  const raw = task?.points;
+  return typeof raw === "number" && Number.isFinite(raw) ? raw : 1;
+};
+
+/**
+ * Récompenses visibles par un enfant : celles qui lui sont nommément
+ * attribuées, plus celles qui n'ont pas de `childId` (communes).
+ */
+export const rewardsForChild = <T extends DailyReward | WeeklyReward>(
+  rewards: T[],
+  childId: ID,
+): T[] => rewards.filter((r) => r.childId == null || r.childId === childId);
+
 export const getDailyPoints = (
   dailyData: DailyData,
+  tasks: Task[],
   challenges: Challenge[],
   childId: ID,
   date: Date,
@@ -53,8 +69,9 @@ export const getDailyPoints = (
 
   let points = 0;
 
-  Object.values(childData.completedTasks || {}).forEach((completed) => {
-    if (completed) points += 1;
+  Object.entries(childData.completedTasks || {}).forEach(([taskId, completed]) => {
+    if (!completed) return;
+    points += taskValue(tasks.find((t) => t.id === Number(taskId)));
   });
 
   Object.entries(childData.activeChallenges || {}).forEach(([challengeId, status]) => {
@@ -70,13 +87,14 @@ export const getDailyPoints = (
 
 export const getWeeklyPoints = (
   dailyData: DailyData,
+  tasks: Task[],
   challenges: Challenge[],
   childId: ID,
   currentDate: Date,
 ): number => {
   const weekDates = getWeekDates(currentDate);
   return weekDates.reduce(
-    (acc, d) => acc + getDailyPoints(dailyData, challenges, childId, d),
+    (acc, d) => acc + getDailyPoints(dailyData, tasks, challenges, childId, d),
     0,
   );
 };

@@ -19,13 +19,13 @@ const ChildFocusPage = () => {
   const {
     selectedChild,
     tasks,
-    dailyRewards,
     currentDate,
     goHome,
     isTaskCompleted,
     toggleTaskCompletion,
     getDailyPoints,
     getTierInfo,
+    getDailyRewardsForChild,
     soundEnabled,
   } = useAppState();
 
@@ -44,7 +44,7 @@ const ChildFocusPage = () => {
   const dailyPoints = getDailyPoints(child.id, currentDate);
   const tierInfo = getTierInfo(dailyPoints);
   const TierIcon = tierInfo.icon;
-  const availableRewards = dailyRewards.filter((r) => dailyPoints >= r.points);
+  const availableRewards = getDailyRewardsForChild(child.id).filter((r) => dailyPoints >= r.points);
 
   return (
     <PageShell title={child.name} onHome={goHome}>

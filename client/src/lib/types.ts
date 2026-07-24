@@ -35,6 +35,9 @@ export type Child = {
 export type Task = {
   id: ID;
   name: string;
+  // Valeur de la tâche (1 à 3). Absent = 1 : rétrocompatible avec les tâches
+  // créées avant l'introduction des points variables.
+  points?: number;
   // Pictogramme optionnel (clé stable du catalogue, ex. "teeth"). Sérialisable.
   // Rétrocompatible : les tâches existantes sans ce champ restent valides.
   icon?: string;
@@ -44,12 +47,17 @@ export type DailyReward = {
   id: ID;
   name: string;
   points: number;
+  // Récompense réservée à un enfant. Absent = visible par tous les enfants
+  // (comportement historique conservé).
+  childId?: ID;
 };
 
 export type WeeklyReward = {
   id: ID;
   name: string;
   points: number;
+  // Récompense réservée à un enfant. Absent = visible par tous les enfants.
+  childId?: ID;
 };
 
 export type Challenge = {

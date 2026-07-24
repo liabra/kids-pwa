@@ -35,6 +35,7 @@ import {
 } from "@dnd-kit/core";
 import { CheckCircle2, GripVertical } from "lucide-react";
 import TaskIcon from "@/components/TaskIcon";
+import { taskValue } from "@/lib/points";
 import type { ID, Task } from "@/lib/types";
 
 const TODO = "todo";
@@ -111,12 +112,20 @@ const TaskCard = ({
       ].join(" ")}
       {...listeners}
       {...attributes}
-      aria-label={`${task.name} — ${done ? "fait" : "à faire"}`}
+      aria-label={`${task.name}, ${taskValue(task)} point${taskValue(task) > 1 ? "s" : ""} — ${done ? "fait" : "à faire"}`}
     >
       <TaskIcon iconKey={task.icon} size={s.icon} />
       <span className={`flex-1 font-semibold leading-tight break-words ${s.label}`}>
         {task.name}
       </span>
+      {taskValue(task) > 1 && (
+        <span
+          className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700"
+          aria-hidden="true"
+        >
+          {taskValue(task)}
+        </span>
+      )}
       {done ? (
         <CheckCircle2 size={s.mark} className="text-green-600 shrink-0" />
       ) : (

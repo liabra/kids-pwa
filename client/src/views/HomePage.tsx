@@ -23,7 +23,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { useAppState } from "@/context/AppStateContext";
-import { getDayName } from "@/lib/points";
+import { getDayName, taskValue } from "@/lib/points";
 import { celebrate } from "@/lib/celebrate";
 import TaskIcon from "@/components/TaskIcon";
 import TaskBoard from "@/components/TaskBoard";
@@ -50,6 +50,7 @@ const HomePage = ({
     removeDailyReward, removeWeeklyReward,
     clearAllTasks, clearAllDailyRewards, clearAllChallenges, clearAllWeeklyRewards,
     getDailyPoints, getWeeklyPoints, getTierInfo,
+    getDailyRewardsForChild,
     soundEnabled,
   } = useAppState();
 
@@ -212,6 +213,9 @@ const HomePage = ({
             const TierIcon = tierInfo.icon;
             const activeChallenges = getActiveChallenges(child.id);
             const childTasks = tasks.filter((task) => child.assignedTasks.includes(task.id));
+            const availableRewards = getDailyRewardsForChild(child.id).filter(
+              (r) => dailyPoints >= r.points,
+            );
 
             return (
               <div key={child.id} className="bg-white rounded-xl shadow-xl p-6 relative">
@@ -390,20 +394,18 @@ const HomePage = ({
                   </div>
                 )}
 
-                {dailyRewards.filter((r) => dailyPoints >= r.points).length > 0 && (
+                {availableRewards.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-green-700 mb-2 text-sm flex items-center gap-2">
                       <Trophy size={16} />
                       Récompenses disponibles:
                     </h3>
                     <div className="space-y-1">
-                      {dailyRewards
-                        .filter((r) => dailyPoints >= r.points)
-                        .map((reward) => (
-                          <div key={reward.id} className="bg-green-50 px-3 py-2 rounded text-sm text-green-800">
-                            🎁 {reward.name} ({reward.points} pts)
-                          </div>
-                        ))}
+                      {availableRewards.map((reward) => (
+                        <div key={reward.id} className="bg-green-50 px-3 py-2 rounded text-sm text-green-800">
+                          🎁 {reward.name} ({reward.points} pts)
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -435,6 +437,9 @@ const HomePage = ({
                   <span className="flex items-center gap-2 text-gray-800">
                     <TaskIcon iconKey={task.icon} size={18} />
                     {task.name}
+                    <span className="text-xs font-bold text-blue-700 bg-blue-100 rounded-full px-2 py-0.5">
+                      {taskValue(task)} pt{taskValue(task) > 1 ? "s" : ""}
+                    </span>
                   </span>
                   <button onClick={() => removeTask(task.id)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={16} />
@@ -462,6 +467,11 @@ const HomePage = ({
                 <div key={reward.id} className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
                   <span className="text-gray-800">
                     {reward.name} ({reward.points} pts)
+                    <span className="ml-2 text-xs text-gray-500">
+                      {reward.childId == null
+                        ? "· tous"
+                        : `· ${children.find((c) => c.id === reward.childId)?.name ?? "?"}`}
+                    </span>
                   </span>
                   <button onClick={() => removeDailyReward(reward.id)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={16} />
@@ -516,6 +526,11 @@ const HomePage = ({
                 <div key={reward.id} className="flex items-center justify-between bg-purple-50 p-3 rounded-lg">
                   <span className="text-gray-800">
                     {reward.name} ({reward.points} pts/semaine)
+                    <span className="ml-2 text-xs text-gray-500">
+                      {reward.childId == null
+                        ? "· tous"
+                        : `· ${children.find((c) => c.id === reward.childId)?.name ?? "?"}`}
+                    </span>
                   </span>
                   <button onClick={() => removeWeeklyReward(reward.id)} className="text-red-500 hover:text-red-700 transition">
                     <Trash2 size={16} />

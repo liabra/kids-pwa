@@ -30,6 +30,7 @@ import {
   getWeekStart,
   getDailyPoints as computeDailyPoints,
   getWeeklyPoints as computeWeeklyPoints,
+  rewardsForChild,
 } from "@/lib/points";
 
 function useAppStateValue() {
@@ -83,15 +84,19 @@ function useAppStateValue() {
 
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskIcon, setNewTaskIcon] = useState("");
+  const [newTaskPoints, setNewTaskPoints] = useState(1);
 
   const [newRewardName, setNewRewardName] = useState("");
   const [newRewardPoints, setNewRewardPoints] = useState(5);
+  // null = récompense commune à tous les enfants.
+  const [newRewardChildId, setNewRewardChildId] = useState<ID | null>(null);
 
   const [newChallengeName, setNewChallengeName] = useState("");
   const [newChallengePoints, setNewChallengePoints] = useState(2);
 
   const [newWeeklyRewardName, setNewWeeklyRewardName] = useState("");
   const [newWeeklyRewardPoints, setNewWeeklyRewardPoints] = useState(20);
+  const [newWeeklyRewardChildId, setNewWeeklyRewardChildId] = useState<ID | null>(null);
 
   const [editingChildId, setEditingChildId] = useState<number | null>(null);
   const [editingChildName, setEditingChildName] = useState<string>("");
@@ -188,10 +193,16 @@ function useAppStateValue() {
   const addTask = () => {
     if (!newTaskName.trim()) return;
 
-    const newTask = { id: Date.now(), name: newTaskName.trim(), icon: newTaskIcon || undefined };
+    const newTask = {
+      id: Date.now(),
+      name: newTaskName.trim(),
+      icon: newTaskIcon || undefined,
+      points: Math.min(3, Math.max(1, Math.round(newTaskPoints) || 1)),
+    };
     setTasks((prev) => [...prev, newTask]);
     setNewTaskName("");
     setNewTaskIcon("");
+    setNewTaskPoints(1);
     goHome();
   };
 
@@ -341,12 +352,22 @@ function useAppStateValue() {
   // =========================
   const addDailyReward = () => {
     if (!newRewardName.trim()) return;
-    const newReward = { id: Date.now(), name: newRewardName.trim(), points: newRewardPoints };
+    const newReward = {
+      id: Date.now(),
+      name: newRewardName.trim(),
+      points: newRewardPoints,
+      childId: newRewardChildId ?? undefined,
+    };
     setDailyRewards((prev) => [...prev, newReward]);
     setNewRewardName("");
     setNewRewardPoints(5);
+    setNewRewardChildId(null);
     goHome();
   };
+
+  /** Récompenses visibles par un enfant (les siennes + les communes). */
+  const getDailyRewardsForChild = (childId: ID) => rewardsForChild(dailyRewards, childId);
+  const getWeeklyRewardsForChild = (childId: ID) => rewardsForChild(weeklyRewards, childId);
 
   const removeDailyReward = (id: ID) => {
     if (!confirm("Voulez-vous vraiment supprimer cette récompense ?")) return;
@@ -356,10 +377,16 @@ function useAppStateValue() {
   const addWeeklyReward = () => {
     if (!newWeeklyRewardName.trim()) return;
 
-    const newReward = { id: Date.now(), name: newWeeklyRewardName.trim(), points: newWeeklyRewardPoints };
+    const newReward = {
+      id: Date.now(),
+      name: newWeeklyRewardName.trim(),
+      points: newWeeklyRewardPoints,
+      childId: newWeeklyRewardChildId ?? undefined,
+    };
     setWeeklyRewards((prev) => [...prev, newReward]);
     setNewWeeklyRewardName("");
     setNewWeeklyRewardPoints(20);
+    setNewWeeklyRewardChildId(null);
     goHome();
   };
 
@@ -477,10 +504,10 @@ function useAppStateValue() {
   // Points (wrappers liés à l'état, autour des fonctions pures de lib/points)
   // =========================
   const getDailyPoints = (childId: ID, date: Date): number =>
-    computeDailyPoints(dailyData, challenges, childId, date);
+    computeDailyPoints(dailyData, tasks, challenges, childId, date);
 
   const getWeeklyPoints = (childId: ID): number =>
-    computeWeeklyPoints(dailyData, challenges, childId, currentDate);
+    computeWeeklyPoints(dailyData, tasks, challenges, childId, currentDate);
 
   const getTierInfo = (points: number) => {
     if (points >= 15) return { icon: Flame, color: "text-orange-500", label: "En feu!", animation: "animate-pulse" };
@@ -518,12 +545,15 @@ function useAppStateValue() {
     newChildColor, setNewChildColor,
     newTaskName, setNewTaskName,
     newTaskIcon, setNewTaskIcon,
+    newTaskPoints, setNewTaskPoints,
     newRewardName, setNewRewardName,
     newRewardPoints, setNewRewardPoints,
+    newRewardChildId, setNewRewardChildId,
     newChallengeName, setNewChallengeName,
     newChallengePoints, setNewChallengePoints,
     newWeeklyRewardName, setNewWeeklyRewardName,
     newWeeklyRewardPoints, setNewWeeklyRewardPoints,
+    newWeeklyRewardChildId, setNewWeeklyRewardChildId,
     editingChildId, setEditingChildId,
     editingChildName, setEditingChildName,
     colors,
@@ -533,6 +563,7 @@ function useAppStateValue() {
     ensureDailySlot, toggleTaskCompletion, isTaskCompleted, clearTodayCompletionsForChild,
     addChallenge, removeChallenge, activateChallenge, resolveChallenge, getActiveChallenges,
     addDailyReward, removeDailyReward, addWeeklyReward, removeWeeklyReward,
+    getDailyRewardsForChild, getWeeklyRewardsForChild,
     clearAllTasks, clearAllDailyRewards, clearAllChallenges, clearAllWeeklyRewards,
     toggleWeeklyReward, isWeeklyRewardClaimed,
     getDailyPoints, getWeeklyPoints, getTierInfo,

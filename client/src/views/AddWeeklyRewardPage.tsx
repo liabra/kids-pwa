@@ -3,12 +3,14 @@
  * Déplacé depuis home.tsx sans modification.
  */
 import PageShell from "@/components/PageShell";
+import RewardOwnerPicker from "@/components/RewardOwnerPicker";
 import { useAppState } from "@/context/AppStateContext";
 
 const AddWeeklyRewardPage = () => {
   const {
     newWeeklyRewardName, setNewWeeklyRewardName,
     newWeeklyRewardPoints, setNewWeeklyRewardPoints,
+    newWeeklyRewardChildId, setNewWeeklyRewardChildId,
     addWeeklyReward, goHome,
   } = useAppState();
 
@@ -30,6 +32,8 @@ const AddWeeklyRewardPage = () => {
           onChange={(e) => setNewWeeklyRewardPoints(parseInt(e.target.value) || 0)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
         />
+        <RewardOwnerPicker value={newWeeklyRewardChildId} onChange={setNewWeeklyRewardChildId} />
+
         <div className="flex gap-2">
           <button onClick={addWeeklyReward} className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition">
             Ajouter
@@ -38,6 +42,7 @@ const AddWeeklyRewardPage = () => {
             onClick={() => {
               setNewWeeklyRewardName("");
               setNewWeeklyRewardPoints(20);
+              setNewWeeklyRewardChildId(null);
               goHome();
             }}
             className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"

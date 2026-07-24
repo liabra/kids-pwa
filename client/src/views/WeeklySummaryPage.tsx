@@ -18,7 +18,7 @@ const WeeklySummaryPage = ({
   const {
     children,
     currentDate,
-    weeklyRewards,
+    getWeeklyRewardsForChild,
     goHome,
     getDailyPoints,
     getWeeklyPoints,
@@ -36,7 +36,9 @@ const WeeklySummaryPage = ({
         {children.map((child) => {
           const weekDates = getWeekDates(currentDate);
           const weeklyPoints = getWeeklyPoints(child.id);
-          const availableRewards = weeklyRewards.filter((r) => weeklyPoints >= r.points);
+          const availableRewards = getWeeklyRewardsForChild(child.id).filter(
+            (r) => weeklyPoints >= r.points,
+          );
 
           return (
             <div key={child.id} className="mb-8 bg-gray-50 rounded-xl p-6">
