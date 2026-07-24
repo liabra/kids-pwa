@@ -15,6 +15,7 @@ export type ViewName =
   | "addChallenge"
   | "addWeeklyReward"
   | "manageTasks"
+  | "childFocus"
   | "history"
   | "weeklySummary"
   | "settings";

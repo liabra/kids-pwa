@@ -10,6 +10,7 @@ import AddChallengePage from "@/views/AddChallengePage";
 import AddWeeklyRewardPage from "@/views/AddWeeklyRewardPage";
 import ManageTasksPage from "@/views/ManageTasksPage";
 import HomePage from "@/views/HomePage";
+import ChildFocusPage from "@/views/ChildFocusPage";
 import SettingsPage from "@/views/SettingsPage";
 import { isPinSet, setPin, verifyPin } from "@/lib/parentLock";
 import { Lock } from "lucide-react";
@@ -249,6 +250,7 @@ const AppShell = () => {
       {effectiveView === "addChallenge" && <AddChallengePage />}
       {effectiveView === "addWeeklyReward" && <AddWeeklyRewardPage />}
       {effectiveView === "manageTasks" && <ManageTasksPage />}
+      {effectiveView === "childFocus" && <ChildFocusPage />}
       {effectiveView === "history" && <HistoryPage />}
       {effectiveView === "weeklySummary" && <WeeklySummaryPage requireParent={requireParent} />}
       {effectiveView === "settings" && <SettingsPage lockParent={lockParent} />}

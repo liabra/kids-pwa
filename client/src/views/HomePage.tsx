@@ -20,11 +20,13 @@ import {
   Lock,
   Unlock,
   Settings,
+  Maximize2,
 } from "lucide-react";
 import { useAppState } from "@/context/AppStateContext";
 import { getDayName } from "@/lib/points";
 import { celebrate } from "@/lib/celebrate";
 import TaskIcon from "@/components/TaskIcon";
+import TaskBoard from "@/components/TaskBoard";
 
 const HomePage = ({
   parentMode,
@@ -246,9 +248,16 @@ const HomePage = ({
                       </>
                     ) : (
                       <>
-                        <h2 className="text-2xl font-bold" style={{ color: child.color }}>
+                        {/* Toucher le prénom ouvre le tableau en grand format. */}
+                        <button
+                          onClick={() => go("childFocus", { childId: child.id })}
+                          className="flex items-center gap-1 text-2xl font-bold hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 rounded"
+                          style={{ color: child.color }}
+                          title="Ouvrir en grand"
+                        >
                           {child.name}
-                        </h2>
+                          <Maximize2 size={18} className="opacity-60" />
+                        </button>
 
                         {parentMode && (
                           <button
@@ -349,34 +358,17 @@ const HomePage = ({
                         </button>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      {childTasks.map((task) => (
-                        <label
-                          key={task.id}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isTaskCompleted(child.id, task.id)}
-                            onChange={() => {
-                              // On célèbre uniquement au passage non-coché -> coché.
-                              const wasCompleted = isTaskCompleted(child.id, task.id);
-                              toggleTaskCompletion(child.id, task.id);
-                              if (!wasCompleted) celebrate({ sound: soundEnabled });
-                            }}
-                            className="w-5 h-5 text-green-500 rounded focus:ring-2 focus:ring-green-400"
-                          />
-                          <TaskIcon iconKey={task.icon} size={24} />
-                          <span
-                            className={`text-sm ${
-                              isTaskCompleted(child.id, task.id) ? "line-through text-gray-500" : "text-gray-800"
-                            }`}
-                          >
-                            {task.name}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+                    <TaskBoard
+                      tasks={childTasks}
+                      isDone={(taskId) => isTaskCompleted(child.id, taskId)}
+                      onMove={(taskId, toDone) => {
+                        // Garde-fou : ne rien faire si la colonne ne change pas.
+                        if (isTaskCompleted(child.id, taskId) === toDone) return;
+                        toggleTaskCompletion(child.id, taskId);
+                        // On célèbre uniquement le passage "à faire" -> "fait".
+                        if (toDone) celebrate({ sound: soundEnabled });
+                      }}
+                    />
                   </div>
                 )}
 
